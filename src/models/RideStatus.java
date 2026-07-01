@@ -8,7 +8,7 @@ package models;
 public enum RideStatus {
     PENDING,
     ACCEPTED,
-    IN_PROGRESS,
+    STARTED,
     COMPLETED,
     CANCELLED
 }

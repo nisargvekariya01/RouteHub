@@ -44,9 +44,25 @@ public class RideService {
         
         Driver matchedDriver = driverMatchingStrategy.findMatch(passenger, pickup);
         ride.acceptRide(matchedDriver);
+        
+        // This transitions the driver to ON_TRIP, making them unavailable for other matches
         matchedDriver.startRide(); 
         
         rideRepository.save(ride);
+        return ride;
+    }
+
+    /**
+     * Authorizes and transitions a ride to the STARTED state.
+     * The Ride's internal state machine verifies that the provided driver ID matches the assigned driver.
+     */
+    public Ride startRide(String rideId, String driverId) {
+        Ride ride = rideRepository.findById(rideId)
+            .orElseThrow(() -> new IllegalArgumentException("Ride not found."));
+            
+        ride.startRide(driverId); // State machine handles authorization and transition
+        
+        rideRepository.update(ride);
         return ride;
     }
 
@@ -60,7 +76,7 @@ public class RideService {
             
         double finalFare = fareStrategy.calculateFare(ride, isPeakHour);
         
-        // This validates that the ride is IN_PROGRESS and updates it to COMPLETED
+        // This validates that the ride is STARTED and updates it to COMPLETED
         ride.completeRide(finalFare);
         
         // This transitions the driver from ON_TRIP back to ONLINE
