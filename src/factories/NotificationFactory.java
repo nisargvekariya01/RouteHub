@@ -1,9 +1,9 @@
 package factories;
 
-import services.notifications.ConsoleNotification;
-import services.notifications.EmailNotification;
-import services.notifications.NotificationService;
-import services.notifications.SMSNotification;
+import observers.ConsoleNotification;
+import observers.EmailNotification;
+import observers.NotificationService;
+import observers.SMSNotification;
 
 /**
  * FACTORY PATTERN:

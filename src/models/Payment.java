@@ -1,5 +1,7 @@
 package models;
 
+import models.enums.*;
+
 /**
  * Model representing a financial transaction for a completed ride.
  */

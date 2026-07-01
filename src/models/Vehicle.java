@@ -1,5 +1,7 @@
 package models;
 
+import models.enums.*;
+
 /**
  * Model representing a vehicle driven by a driver.
  * Exists to encapsulate vehicle specifications separate from the driver entity.

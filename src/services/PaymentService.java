@@ -2,8 +2,8 @@ package services;
 
 import exceptions.RideShareException;
 import models.Payment;
-import models.PaymentStatus;
-import strategies.PaymentMethod;
+import models.enums.PaymentStatus;
+import strategies.payment.PaymentMethod;
 
 import java.util.UUID;
 

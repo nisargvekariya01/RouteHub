@@ -6,9 +6,9 @@ import models.Location;
 import models.Passenger;
 import models.Ride;
 import repositories.RideRepository;
-import strategies.DriverMatchingStrategy;
-import strategies.FareStrategy;
-import services.notifications.NotificationService;
+import strategies.matching.DriverMatchingStrategy;
+import strategies.pricing.FareStrategy;
+import observers.NotificationService;
 
 import java.util.ArrayList;
 import java.util.List;

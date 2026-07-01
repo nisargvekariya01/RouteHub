@@ -1,5 +1,7 @@
 package models;
 
+import models.enums.*;
+
 /**
  * Model representing a driver in the system.
  * 

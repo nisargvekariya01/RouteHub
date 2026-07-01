@@ -1,5 +1,7 @@
 package models;
 
+import models.enums.*;
+
 import exceptions.InvalidRideStateException;
 import java.time.LocalDateTime;
 import java.util.UUID;

@@ -1,5 +1,7 @@
 package models;
 
+import models.enums.*;
+
 import java.util.Objects;
 
 /**

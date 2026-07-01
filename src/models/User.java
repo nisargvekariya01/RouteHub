@@ -1,5 +1,7 @@
 package models;
 
+import models.enums.*;
+
 /**
  * Base abstract model representing a generic user in the system.
  * Exists to centralize shared properties like ID, name, and contact details 
