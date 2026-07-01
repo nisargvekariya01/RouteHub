@@ -1,5 +1,6 @@
 package services;
 
+import exceptions.RideNotFoundException;
 import models.Driver;
 import models.Location;
 import models.Passenger;
@@ -13,17 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Service for orchestrating ride-related business operations.
- * Acts as the 'Subject' (or Observable) in the Observer Pattern.
- */
 public class RideService {
     private final RideRepository rideRepository;
-    
     private final DriverMatchingStrategy driverMatchingStrategy;
     private final FareStrategy fareStrategy;
-    
-    // OBSERVER PATTERN: List of observers listening to ride lifecycle events
     private final List<NotificationService> notificationObservers = new ArrayList<>();
 
     public RideService(RideRepository rideRepository, DriverMatchingStrategy driverMatchingStrategy, FareStrategy fareStrategy) {
@@ -32,18 +26,12 @@ public class RideService {
         this.fareStrategy = fareStrategy;
     }
 
-    /**
-     * OBSERVER PATTERN: Dynamically register new notification channels.
-     */
     public void addNotificationObserver(NotificationService observer) {
         if (observer != null) {
             this.notificationObservers.add(observer);
         }
     }
     
-    /**
-     * OBSERVER PATTERN: Broadcast updates to all registered channels.
-     */
     private void notifyObservers(Ride ride, String message) {
         for (NotificationService observer : notificationObservers) {
             observer.onRideUpdate(ride, message);
@@ -72,7 +60,7 @@ public class RideService {
 
     public Ride startRide(String rideId, String driverId) {
         Ride ride = rideRepository.findById(rideId)
-            .orElseThrow(() -> new IllegalArgumentException("Ride not found."));
+            .orElseThrow(() -> new RideNotFoundException("Ride with ID " + rideId + " not found."));
             
         ride.startRide(driverId);
         rideRepository.update(ride);
@@ -83,7 +71,7 @@ public class RideService {
 
     public Ride completeRide(String rideId, boolean isPeakHour) {
         Ride ride = rideRepository.findById(rideId)
-            .orElseThrow(() -> new IllegalArgumentException("Ride not found."));
+            .orElseThrow(() -> new RideNotFoundException("Ride with ID " + rideId + " not found."));
             
         double finalFare = fareStrategy.calculateFare(ride, isPeakHour);
         

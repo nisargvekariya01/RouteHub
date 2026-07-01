@@ -1,5 +1,7 @@
 package services;
 
+import exceptions.DuplicateUserException;
+import exceptions.RideShareException;
 import models.Passenger;
 import models.User;
 import repositories.UserRepository;
@@ -7,13 +9,6 @@ import repositories.UserRepository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Service handling user (passenger) related business logic.
- * 
- * SOLID Principles Applied:
- * - SRP: This class focuses strictly on user-related actions.
- * - DIP: Depends on the UserRepository abstraction.
- */
 public class UserService {
     private final UserRepository userRepository;
 
@@ -29,6 +24,13 @@ public class UserService {
             throw new IllegalArgumentException("Phone number cannot be empty.");
         }
 
+        // Enforce uniqueness with a custom domain exception
+        boolean exists = userRepository.findAll().stream()
+                .anyMatch(u -> u.getPhoneNumber().equals(phoneNumber));
+        if (exists) {
+            throw new DuplicateUserException("Passenger with phone number " + phoneNumber + " already exists.");
+        }
+
         String id = UUID.randomUUID().toString();
         Passenger passenger = new Passenger(id, name, phoneNumber);
         
@@ -36,15 +38,12 @@ public class UserService {
         return passenger;
     }
     
-    /**
-     * Submits a new rating for a passenger, securely recalculating their aggregate average.
-     */
     public Passenger ratePassenger(String userId, int rating) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            .orElseThrow(() -> new RideShareException("User with ID " + userId + " not found."));
             
         if (!(user instanceof Passenger)) {
-            throw new IllegalArgumentException("Only passengers can receive passenger ratings.");
+            throw new RideShareException("Only passengers can receive passenger ratings.");
         }
         
         Passenger passenger = (Passenger) user;
