@@ -9,6 +9,9 @@ public abstract class User {
     private final String id;
     private final String name;
     private String phoneNumber;
+    
+    // Storing location at the User level ensures both Drivers and Passengers have location tracking
+    private Location currentLocation;
 
     public User(String id, String name, String phoneNumber) {
         this.id = id;
@@ -30,5 +33,13 @@ public abstract class User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Location getCurrentLocation() {
+        return currentLocation;
+    }
+
+    public void setCurrentLocation(Location currentLocation) {
+        this.currentLocation = currentLocation;
     }
 }
