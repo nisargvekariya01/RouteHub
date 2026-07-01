@@ -3,22 +3,36 @@ package models;
 /**
  * Model representing a driver in the system.
  * 
+ * EXPLAINING DATA AGGREGATION:
+ * Aggregation is the act of summarizing many individual data points into a single metric.
+ * Instead of storing a massive historical List of every rating a driver has ever received 
+ * (which would waste memory and require O(N) recalculations), we aggregate the average iteratively.
+ * By maintaining just two variables (`averageRating` and `totalRatings`), we can instantly compute 
+ * the new moving average using a cumulative formula in O(1) constant time.
+ * 
  * WHY STATE MANAGEMENT IS IMPORTANT:
  * State management guarantees that an entity cannot perform invalid actions based on its current context.
- * For example, a driver who is already 'ON_TRIP' cannot accept a new ride or suddenly go 'OFFLINE'.
- * Enforcing these rules strictly inside the domain model using Enums prevents race conditions, 
- * logical errors, and double-booking, ensuring the entire system remains in a valid and consistent state.
+ * Enforcing rules strictly inside the domain model using Enums prevents race conditions and double-booking, 
+ * ensuring the entire system remains in a valid and consistent state.
  */
 public class Driver extends User {
     private Vehicle vehicle;
     private DriverStatus status;
-    private double rating;
+    private double averageRating;
+    private int totalRatings;
+    
+    // History & Performance Tracking
+    private int tripsCompleted;
+    private double totalEarnings;
 
     public Driver(String id, String name, String phoneNumber, Vehicle vehicle) {
         super(id, name, phoneNumber);
         this.vehicle = vehicle;
         this.status = DriverStatus.OFFLINE;
-        this.rating = 5.0; // Default rating
+        this.averageRating = 5.0; // Default rating
+        this.totalRatings = 0;
+        this.tripsCompleted = 0;
+        this.totalEarnings = 0.0;
     }
 
     public Vehicle getVehicle() {
@@ -30,7 +44,7 @@ public class Driver extends User {
     }
 
     public double getRating() {
-        return rating;
+        return averageRating;
     }
 
     public void setVehicle(Vehicle vehicle) {
@@ -39,14 +53,43 @@ public class Driver extends User {
         }
     }
 
-    public void updateRating(double newRating) {
-        if (newRating >= 1.0 && newRating <= 5.0) {
-            this.rating = newRating;
+    public void addRating(int newRating) {
+        if (newRating < 1 || newRating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5.");
         }
+        this.averageRating = ((this.averageRating * this.totalRatings) + newRating) / (this.totalRatings + 1);
+        this.totalRatings++;
     }
 
     public boolean isAvailable() {
         return this.status == DriverStatus.ONLINE;
+    }
+
+    // --- HISTORY & EARNINGS ---
+
+    public int getTripsCompleted() {
+        return tripsCompleted;
+    }
+
+    public double getTotalEarnings() {
+        return totalEarnings;
+    }
+
+    public void addEarnings(double amount) {
+        if (amount > 0) {
+            this.totalEarnings += amount;
+            this.tripsCompleted++;
+        }
+    }
+
+    /**
+     * Helper method to display driver history and stats to the terminal.
+     */
+    public void displayHistory() {
+        System.out.println("--- Driver Stats for " + getName() + " ---");
+        System.out.println("Trips Completed: " + tripsCompleted);
+        System.out.println("Total Earnings: $" + String.format("%.2f", totalEarnings));
+        System.out.println("Current Rating: " + String.format("%.2f", averageRating) + " stars (from " + totalRatings + " reviews)");
     }
 
     // --- STATE MANAGEMENT ---
@@ -77,7 +120,7 @@ public class Driver extends User {
 
     public void finishRide() {
         if (this.status == DriverStatus.ON_TRIP) {
-            this.status = DriverStatus.ONLINE; // Transition back to online after dropping off passenger
+            this.status = DriverStatus.ONLINE;
         } else {
             throw new IllegalStateException("Driver must be on a trip to finish it.");
         }

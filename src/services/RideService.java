@@ -42,6 +42,9 @@ public class RideService {
         String rideId = UUID.randomUUID().toString();
         Ride ride = new Ride(rideId, passenger, pickup, dropoff);
         
+        // Ensure the ride is added to the passenger's historical record immediately
+        passenger.addRideToHistory(ride);
+        
         Driver matchedDriver = driverMatchingStrategy.findMatch(passenger, pickup);
         ride.acceptRide(matchedDriver);
         
@@ -68,7 +71,7 @@ public class RideService {
 
     /**
      * Completes the ride, calculates the final fare using the injected FareStrategy,
-     * and correctly resets the driver's availability state.
+     * updates the driver's historical earnings, and resets the driver's availability state.
      */
     public Ride completeRide(String rideId, boolean isPeakHour) {
         Ride ride = rideRepository.findById(rideId)
@@ -78,6 +81,9 @@ public class RideService {
         
         // This validates that the ride is STARTED and updates it to COMPLETED
         ride.completeRide(finalFare);
+        
+        // Add the earnings to the driver's aggregate history
+        ride.getDriver().addEarnings(finalFare);
         
         // This transitions the driver from ON_TRIP back to ONLINE
         ride.getDriver().finishRide();
