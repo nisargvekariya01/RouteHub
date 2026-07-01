@@ -15,9 +15,7 @@ import java.util.UUID;
  * 
  * SOLID Principles Applied:
  * - Open/Closed Principle (OCP): Algorithms for pricing and matching are injected. 
- *   We can introduce 'SurgePricing' or 'VIPMatching' without altering this file.
- * - Dependency Inversion Principle (DIP): Relies entirely on strategy interfaces 
- *   and abstract repository concepts.
+ * - Dependency Inversion Principle (DIP): Relies entirely on strategy interfaces and repository abstractions.
  */
 public class RideService {
     private final RideRepository rideRepository;
@@ -31,9 +29,16 @@ public class RideService {
     }
 
     /**
-     * Core business logic to request a new ride.
-     * Coordinates creating the model, interacting with strategies (future step), 
-     * and saving state to the repository.
+     * Core business logic for a Passenger to request a new ride.
+     * 
+     * This method initializes the ride in a PENDING state.
+     * As per requirements, drivers are NOT assigned at this stage. The ride 
+     * simply enters the system waiting to be matched/accepted later.
+     * 
+     * @param passenger The user requesting the ride
+     * @param pickup The starting location
+     * @param dropoff The destination location
+     * @return The newly created PENDING Ride
      */
     public Ride requestRide(Passenger passenger, Location pickup, Location dropoff) {
         if (passenger == null || pickup == null || dropoff == null) {
@@ -43,9 +48,8 @@ public class RideService {
         String rideId = UUID.randomUUID().toString();
         Ride ride = new Ride(rideId, passenger, pickup, dropoff);
         
-        // Future Integration:
-        // double estimatedFare = pricingStrategy.calculateFare(ride);
-        // Driver driver = matchingStrategy.findMatch(passenger, pickup);
+        // Deliberately NOT assigning a driver here.
+        // It remains PENDING in the repository until a matching engine picks it up.
         
         rideRepository.save(ride);
         return ride;

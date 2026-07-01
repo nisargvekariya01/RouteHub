@@ -6,7 +6,7 @@ package models;
  * preventing invalid state transitions.
  */
 public enum RideStatus {
-    REQUESTED,
+    PENDING,
     ACCEPTED,
     IN_PROGRESS,
     COMPLETED,
