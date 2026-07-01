@@ -7,51 +7,48 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
- * Repository class for managing User (Passenger) data.
+ * Repository for managing Users.
  * 
- * WHY SEPARATE STORAGE FROM BUSINESS LOGIC?
- * The Repository Pattern acts as an in-memory domain object collection.
- * It separates the business logic (Services) from data access logic.
- * This ensures that if we decide to switch from an in-memory Map to an actual database 
- * (like SQL or NoSQL) in the future, we only need to change the repository implementation.
- * The services remain completely untouched, adhering to the Single Responsibility Principle 
- * and Open/Closed Principle. It also significantly improves testability.
+ * SINGLETON PATTERN:
+ * We use the Singleton pattern here to ensure that only ONE instance of the in-memory database 
+ * (the HashMap) exists across the entire application lifecycle. This guarantees a single source 
+ * of truth and prevents data fragmentation where different services might accidentally read/write 
+ * from different isolated instances.
  */
 public class UserRepository {
-    // Using a Map for O(1) lookup by ID
-    private final Map<String, User> dataStore = new HashMap<>();
+    private static UserRepository instance;
+    private final Map<String, User> database;
+
+    // Private constructor blocks instantiation via 'new' keyword
+    private UserRepository() {
+        this.database = new HashMap<>();
+    }
+
+    // Static access method with synchronization for thread safety
+    public static synchronized UserRepository getInstance() {
+        if (instance == null) {
+            instance = new UserRepository();
+        }
+        return instance;
+    }
 
     public void save(User user) {
-        dataStore.put(user.getId(), user);
-    }
-
-    public void update(User user) {
-        if (dataStore.containsKey(user.getId())) {
-            dataStore.put(user.getId(), user);
-        } else {
-            throw new IllegalArgumentException("User does not exist for update.");
-        }
-    }
-
-    public void delete(String id) {
-        dataStore.remove(id);
+        database.put(user.getId(), user);
     }
 
     public Optional<User> findById(String id) {
-        return Optional.ofNullable(dataStore.get(id));
+        return Optional.ofNullable(database.get(id));
+    }
+
+    public void update(User user) {
+        if (database.containsKey(user.getId())) {
+            database.put(user.getId(), user);
+        }
     }
 
     public List<User> findAll() {
-        return new ArrayList<>(dataStore.values());
-    }
-
-    public List<User> search(Predicate<User> criteria) {
-        return dataStore.values().stream()
-                .filter(criteria)
-                .collect(Collectors.toList());
+        return new ArrayList<>(database.values());
     }
 }

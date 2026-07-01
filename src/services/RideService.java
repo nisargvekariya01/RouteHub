@@ -12,12 +12,17 @@ import services.notifications.NotificationService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+/**
+ * OBSERVER & STRATEGY PATTERNS:
+ * - OBSERVER: This class acts as the Subject. It holds `notificationObservers` and broadcasts lifecycle state changes.
+ * - STRATEGY: It relies entirely on injected strategies (`DriverMatchingStrategy`, `FareStrategy`) via DI to decouple algorithms.
+ */
 public class RideService {
     private final RideRepository rideRepository;
     private final DriverMatchingStrategy driverMatchingStrategy;
     private final FareStrategy fareStrategy;
+    
     private final List<NotificationService> notificationObservers = new ArrayList<>();
 
     public RideService(RideRepository rideRepository, DriverMatchingStrategy driverMatchingStrategy, FareStrategy fareStrategy) {
@@ -43,8 +48,13 @@ public class RideService {
             throw new IllegalArgumentException("Invalid ride request parameters.");
         }
 
-        String rideId = UUID.randomUUID().toString();
-        Ride ride = new Ride(rideId, passenger, pickup, dropoff);
+        // BUILDER PATTERN in usage: Creating the Ride cleanly
+        Ride ride = new Ride.Builder()
+                .passenger(passenger)
+                .pickupLocation(pickup)
+                .dropoffLocation(dropoff)
+                .build();
+                
         passenger.addRideToHistory(ride);
         
         notifyObservers(ride, "Ride requested and is currently PENDING. Searching for drivers...");
@@ -52,6 +62,7 @@ public class RideService {
         Driver matchedDriver = driverMatchingStrategy.findMatch(passenger, pickup);
         ride.acceptRide(matchedDriver);
         matchedDriver.startRide(); 
+        
         rideRepository.save(ride);
         
         notifyObservers(ride, "Ride ACCEPTED by driver: " + matchedDriver.getName());

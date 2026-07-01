@@ -7,6 +7,7 @@ if exist src\strategies\PricingStrategy.java del src\strategies\PricingStrategy.
 echo Compiling project...
 if not exist bin mkdir bin
 dir /s /B src\*.java > sources.txt
+powershell -Command "(gc sources.txt) -replace '^', '\"\"\"' -replace '$', '\"\"\"' | Out-File -encoding ASCII sources.txt"
 javac -d bin @sources.txt
 del sources.txt
 echo Running RideShareEngine...
