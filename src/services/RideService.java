@@ -5,7 +5,7 @@ import models.Location;
 import models.Passenger;
 import models.Ride;
 import repositories.RideRepository;
-import strategies.MatchingStrategy;
+import strategies.DriverMatchingStrategy;
 import strategies.PricingStrategy;
 
 import java.util.List;
@@ -14,25 +14,29 @@ import java.util.UUID;
 /**
  * Service for orchestrating ride-related business operations.
  * 
- * SOLID Principles Applied:
- * - Open/Closed Principle (OCP): Algorithms for pricing and matching are injected. 
- * - Dependency Inversion Principle (DIP): Relies entirely on strategy interfaces and repository abstractions.
+ * EXPLAINING DEPENDENCY INVERSION PRINCIPLE (DIP):
+ * DIP states that high-level modules (like RideService) should not depend on low-level modules 
+ * (like NearestDriverStrategy). Instead, both should depend on abstractions.
+ * 
+ * Here, RideService depends exclusively on the `DriverMatchingStrategy` abstraction interface.
+ * It knows *what* to do (find a match) but has no idea *how* it's done (nearest distance, highest rating, etc.).
+ * This makes the system incredibly resilient: we can inject any implementation without breaking the service layer.
  */
 public class RideService {
     private final RideRepository rideRepository;
-    private final MatchingStrategy matchingStrategy;
+    
+    // Depending purely on Abstraction, satisfying the Dependency Inversion Principle
+    private final DriverMatchingStrategy driverMatchingStrategy;
     private final PricingStrategy pricingStrategy;
 
-    public RideService(RideRepository rideRepository, MatchingStrategy matchingStrategy, PricingStrategy pricingStrategy) {
+    public RideService(RideRepository rideRepository, DriverMatchingStrategy driverMatchingStrategy, PricingStrategy pricingStrategy) {
         this.rideRepository = rideRepository;
-        this.matchingStrategy = matchingStrategy;
+        this.driverMatchingStrategy = driverMatchingStrategy;
         this.pricingStrategy = pricingStrategy;
     }
 
     /**
      * Core business logic for a Passenger to request a new ride.
-     * 
-     * Now attempts to match and assign a driver using the provided MatchingStrategy.
      */
     public Ride requestRide(Passenger passenger, Location pickup, Location dropoff) {
         if (passenger == null || pickup == null || dropoff == null) {
@@ -42,23 +46,15 @@ public class RideService {
         String rideId = UUID.randomUUID().toString();
         Ride ride = new Ride(rideId, passenger, pickup, dropoff);
         
-        // Find the nearest driver using our strategy.
-        // If no drivers are available, it will throw a RideShareException("No drivers available.")
-        Driver matchedDriver = matchingStrategy.findMatch(passenger, pickup);
-        
-        // Assign nearest driver and mark the ride as ACCEPTED
+        // Find match using injected abstraction
+        Driver matchedDriver = driverMatchingStrategy.findMatch(passenger, pickup);
         ride.acceptRide(matchedDriver);
-        
-        // Mark driver as ON_TRIP so they aren't matched again while servicing this ride
         matchedDriver.startRide(); 
         
         rideRepository.save(ride);
         return ride;
     }
 
-    /**
-     * Retrieves all ongoing and past rides.
-     */
     public List<Ride> viewAllRides() {
         return rideRepository.findAll();
     }

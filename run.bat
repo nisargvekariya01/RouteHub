@@ -1,6 +1,8 @@
 @echo off
 echo Cleaning up old files...
 if exist src\models\Rider.java del src\models\Rider.java
+if exist src\strategies\MatchingStrategy.java del src\strategies\MatchingStrategy.java
+if exist src\strategies\NearestDriverMatchingStrategy.java del src\strategies\NearestDriverMatchingStrategy.java
 echo Compiling project...
 if not exist bin mkdir bin
 dir /s /B src\*.java > sources.txt

@@ -13,20 +13,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Concrete implementation of the MatchingStrategy that finds the geographically nearest driver.
- * 
- * WHY STRATEGY PATTERN IS USEFUL:
- * The Strategy pattern allows us to define a family of matching algorithms, encapsulate each one, 
- * and make them interchangeable. If we later want to implement a 'HighestRatedDriverStrategy' 
- * or a 'VIPDriverStrategy', we simply create a new class implementing this interface.
- * We can swap algorithms at runtime without modifying the RideService or core business logic, 
- * perfectly adhering to the Open/Closed Principle.
+ * Concrete implementation of DriverMatchingStrategy finding the geographically nearest driver.
  */
-public class NearestDriverMatchingStrategy implements MatchingStrategy {
+public class NearestDriverStrategy implements DriverMatchingStrategy {
 
     private final DriverRepository driverRepository;
 
-    public NearestDriverMatchingStrategy(DriverRepository driverRepository) {
+    public NearestDriverStrategy(DriverRepository driverRepository) {
         this.driverRepository = driverRepository;
     }
 
@@ -34,19 +27,16 @@ public class NearestDriverMatchingStrategy implements MatchingStrategy {
     public Driver findMatch(Passenger passenger, Location pickupLocation) {
         List<Driver> allDrivers = driverRepository.findAll();
 
-        // 1. Filter only ONLINE drivers (isAvailable checks for ONLINE status, inherently ignoring OFFLINE and ON_TRIP)
         List<Driver> onlineDrivers = allDrivers.stream()
                 .filter(Driver::isAvailable)
-                .filter(driver -> driver.getCurrentLocation() != null) // Ensure location exists
+                .filter(driver -> driver.getCurrentLocation() != null)
                 .collect(Collectors.toList());
 
-        // 2. If none exists, throw exception with specific requested message
         if (onlineDrivers.isEmpty()) {
             throw new RideShareException("No drivers available.");
         }
 
-        // 3. Find the nearest driver using Collections.min and a custom comparator
-        Driver nearestDriver = Collections.min(onlineDrivers, new Comparator<Driver>() {
+        return Collections.min(onlineDrivers, new Comparator<Driver>() {
             @Override
             public int compare(Driver d1, Driver d2) {
                 double dist1 = DistanceCalculator.calculateDistance(pickupLocation, d1.getCurrentLocation());
@@ -54,7 +44,5 @@ public class NearestDriverMatchingStrategy implements MatchingStrategy {
                 return Double.compare(dist1, dist2);
             }
         });
-
-        return nearestDriver;
     }
 }
