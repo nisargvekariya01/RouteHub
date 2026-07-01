@@ -1,5 +1,6 @@
 package services;
 
+import models.Driver;
 import models.Location;
 import models.Passenger;
 import models.Ride;
@@ -31,14 +32,7 @@ public class RideService {
     /**
      * Core business logic for a Passenger to request a new ride.
      * 
-     * This method initializes the ride in a PENDING state.
-     * As per requirements, drivers are NOT assigned at this stage. The ride 
-     * simply enters the system waiting to be matched/accepted later.
-     * 
-     * @param passenger The user requesting the ride
-     * @param pickup The starting location
-     * @param dropoff The destination location
-     * @return The newly created PENDING Ride
+     * Now attempts to match and assign a driver using the provided MatchingStrategy.
      */
     public Ride requestRide(Passenger passenger, Location pickup, Location dropoff) {
         if (passenger == null || pickup == null || dropoff == null) {
@@ -48,8 +42,15 @@ public class RideService {
         String rideId = UUID.randomUUID().toString();
         Ride ride = new Ride(rideId, passenger, pickup, dropoff);
         
-        // Deliberately NOT assigning a driver here.
-        // It remains PENDING in the repository until a matching engine picks it up.
+        // Find the nearest driver using our strategy.
+        // If no drivers are available, it will throw a RideShareException("No drivers available.")
+        Driver matchedDriver = matchingStrategy.findMatch(passenger, pickup);
+        
+        // Assign nearest driver and mark the ride as ACCEPTED
+        ride.acceptRide(matchedDriver);
+        
+        // Mark driver as ON_TRIP so they aren't matched again while servicing this ride
+        matchedDriver.startRide(); 
         
         rideRepository.save(ride);
         return ride;
