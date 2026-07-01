@@ -6,7 +6,7 @@ import models.Passenger;
 import models.Ride;
 import repositories.RideRepository;
 import strategies.DriverMatchingStrategy;
-import strategies.PricingStrategy;
+import strategies.FareStrategy;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,29 +15,25 @@ import java.util.UUID;
  * Service for orchestrating ride-related business operations.
  * 
  * EXPLAINING DEPENDENCY INVERSION PRINCIPLE (DIP):
- * DIP states that high-level modules (like RideService) should not depend on low-level modules 
- * (like NearestDriverStrategy). Instead, both should depend on abstractions.
+ * DIP states that high-level modules (like RideService) should not depend on low-level modules.
+ * Instead, both should depend on abstractions.
  * 
- * Here, RideService depends exclusively on the `DriverMatchingStrategy` abstraction interface.
- * It knows *what* to do (find a match) but has no idea *how* it's done (nearest distance, highest rating, etc.).
+ * Here, RideService depends exclusively on the `DriverMatchingStrategy` and `FareStrategy` abstractions.
+ * It knows *what* to do (find a match, calculate a fare) but has no idea *how* it's done.
  * This makes the system incredibly resilient: we can inject any implementation without breaking the service layer.
  */
 public class RideService {
     private final RideRepository rideRepository;
     
-    // Depending purely on Abstraction, satisfying the Dependency Inversion Principle
     private final DriverMatchingStrategy driverMatchingStrategy;
-    private final PricingStrategy pricingStrategy;
+    private final FareStrategy fareStrategy;
 
-    public RideService(RideRepository rideRepository, DriverMatchingStrategy driverMatchingStrategy, PricingStrategy pricingStrategy) {
+    public RideService(RideRepository rideRepository, DriverMatchingStrategy driverMatchingStrategy, FareStrategy fareStrategy) {
         this.rideRepository = rideRepository;
         this.driverMatchingStrategy = driverMatchingStrategy;
-        this.pricingStrategy = pricingStrategy;
+        this.fareStrategy = fareStrategy;
     }
 
-    /**
-     * Core business logic for a Passenger to request a new ride.
-     */
     public Ride requestRide(Passenger passenger, Location pickup, Location dropoff) {
         if (passenger == null || pickup == null || dropoff == null) {
             throw new IllegalArgumentException("Invalid ride request parameters.");
@@ -46,12 +42,31 @@ public class RideService {
         String rideId = UUID.randomUUID().toString();
         Ride ride = new Ride(rideId, passenger, pickup, dropoff);
         
-        // Find match using injected abstraction
         Driver matchedDriver = driverMatchingStrategy.findMatch(passenger, pickup);
         ride.acceptRide(matchedDriver);
         matchedDriver.startRide(); 
         
         rideRepository.save(ride);
+        return ride;
+    }
+
+    /**
+     * Completes the ride, calculates the final fare using the injected FareStrategy,
+     * and correctly resets the driver's availability state.
+     */
+    public Ride completeRide(String rideId, boolean isPeakHour) {
+        Ride ride = rideRepository.findById(rideId)
+            .orElseThrow(() -> new IllegalArgumentException("Ride not found."));
+            
+        double finalFare = fareStrategy.calculateFare(ride, isPeakHour);
+        
+        // This validates that the ride is IN_PROGRESS and updates it to COMPLETED
+        ride.completeRide(finalFare);
+        
+        // This transitions the driver from ON_TRIP back to ONLINE
+        ride.getDriver().finishRide();
+        
+        rideRepository.update(ride);
         return ride;
     }
 
