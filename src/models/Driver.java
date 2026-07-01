@@ -6,7 +6,7 @@ package models;
  * current availability status, and rating.
  */
 public class Driver extends User {
-    private final Vehicle vehicle;
+    private Vehicle vehicle;
     private DriverStatus status;
     private double rating;
 
@@ -31,6 +31,15 @@ public class Driver extends User {
 
     public void setStatus(DriverStatus status) {
         this.status = status;
+    }
+
+    /**
+     * Meaningful method to assign or update the driver's vehicle.
+     */
+    public void setVehicle(Vehicle vehicle) {
+        if (vehicle != null) {
+            this.vehicle = vehicle;
+        }
     }
 
     /**
