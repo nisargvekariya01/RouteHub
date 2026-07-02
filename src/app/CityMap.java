@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import utils.AccurateDistanceCalculator;
+import utils.QuadTree;
 
 /**
  * Singleton service representing the real-world road graph.
@@ -24,6 +25,8 @@ public class CityMap {
     
     // Adjacency List: Node ID -> List of Edge(NeighborId, Distance)
     private final Map<String, List<Edge>> adjacencyList = new HashMap<>();
+
+    private utils.QuadTree quadTree;
 
     private double minLat = Double.MAX_VALUE;
     private double maxLat = -Double.MAX_VALUE;
@@ -72,6 +75,12 @@ public class CityMap {
             }
             nodeReader.close();
 
+            // Initialize QuadTree
+            quadTree = new QuadTree(new QuadTree.BoundingBox(minLat, minLon, maxLat, maxLon));
+            for (Map.Entry<String, Location> entry : nodes.entrySet()) {
+                quadTree.insert(entry.getKey(), entry.getValue());
+            }
+
             // Load Edges
             BufferedReader edgeReader = new BufferedReader(new FileReader("map_edges.csv"));
             while ((line = edgeReader.readLine()) != null) {
@@ -109,18 +118,11 @@ public class CityMap {
 
     /**
      * "Snaps" an arbitrary coordinate to the nearest valid intersection (Node) in the graph.
+     * Utilizes the QuadTree for O(log N) lookup instead of O(N) linear scan.
      */
     public String snapToNearestNode(Location target) {
-        String nearestId = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Map.Entry<String, Location> entry : nodes.entrySet()) {
-            double dist = AccurateDistanceCalculator.calculateDistance(target, entry.getValue());
-            if (dist < minDistance) {
-                minDistance = dist;
-                nearestId = entry.getKey();
-            }
-        }
-        return nearestId;
+        if (quadTree == null) return null;
+        QuadTree.NearestResult result = quadTree.findNearest(target, new QuadTree.NearestResult(null, Double.MAX_VALUE));
+        return result.id;
     }
 }

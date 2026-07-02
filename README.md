@@ -61,6 +61,27 @@ On average, A* was 1.62x faster than Dijkstra.
 
 ---
 
+## 🌲 Spatial Index Benchmark (QuadTree vs Linear Scan)
+
+Coordinate snapping (finding the nearest road to a GPS ping) is traditionally an `O(N)` operation. We built a custom `QuadTree` to recursively divide the map into geographic quadrants, aggressively pruning the search space to achieve `O(log N)` lookups. Here are the results of 2,000 random pings across the 99,000-node graph:
+
+```text
+=====================================================
+  QuadTree vs Linear Scan Benchmark (2,000 probes) 
+=====================================================
+Running Linear Scan...
+Running QuadTree Scan...
+-----------------------------------------------------
+Method         Avg per probe       Complexity
+Linear scan    6,915,413 ns       O(N)
+QuadTree       9,411 ns           O(log N)
+-----------------------------------------------------
+At N = 99088 nodes the QuadTree is 734.8x faster than a linear scan.
+=====================================================
+```
+
+---
+
 ## 🏗 System Architecture Diagram
 
 RouteHub was built from the ground up using **SOLID Principles**. This diagram illustrates the strict decoupling between the Presentation Layer (CLI), the Core Services, and the highly modular Strategy/Repository implementations.

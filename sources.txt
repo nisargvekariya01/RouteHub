@@ -49,4 +49,5 @@
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/StandardFareStrategy.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/tests/AlgorithmBenchmark.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/utils/AccurateDistanceCalculator.java"
+"C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/utils/QuadTree.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/utils/SpatialGrid.java"
