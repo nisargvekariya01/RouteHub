@@ -1,10 +1,15 @@
 # 🚗 RouteHub: Algorithmic Ride-Sharing Backend
 
+![Java](https://img.shields.io/badge/Java-8%2B-ED8B00?style=for-the-badge&logo=java&logoColor=white)
+![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=for-the-badge)
+![Algorithms](https://img.shields.io/badge/Algorithms-Dijkstra%20%7C%20A*-blue?style=for-the-badge)
+![Spatial Indexing](https://img.shields.io/badge/Data%20Structures-QuadTree-purple?style=for-the-badge)
+
 Welcome to **RouteHub**! 
 
 Most ride-sharing clones just draw a straight line between Point A and Point B. **RouteHub is different.** 
 
-This is a pure-Java backend engine built from the ground up to handle **real-world graph routing** and robust system design. It loads actual geographical data of Manhattan, maps it into a graph of over 100,000 intersections, and uses **Dijkstra's Algorithm** to dispatch the truly fastest driver to a passenger's location based on actual road networks.
+This is a pure-Java backend engine built from the ground up to handle **real-world graph routing** and robust system design. It loads actual geographical data of New Delhi, maps it into a graph of over 99,000 intersections, and uses **A* and Dijkstra's Algorithms** to dispatch the truly fastest driver to a passenger's location based on actual road networks.
 
 Built with **Zero Frameworks** and **Zero External Libraries**, RouteHub is a showcase of raw algorithmic problem solving, Clean Architecture, and SOLID principles.
 
@@ -12,10 +17,10 @@ Built with **Zero Frameworks** and **Zero External Libraries**, RouteHub is a sh
 
 ## ⚡ Core Technical Achievements
 
-### 1. Real-World Graph Routing (Dijkstra + Haversine)
-- **Map Ingestion:** The engine natively loads OpenStreetMap (Overpass API) data containing **100,489 nodes** and **400,688 road edges** representing the streets of Manhattan.
-- **Coordinate Snapping:** When a user requests a ride from a random GPS coordinate, the engine uses the **Haversine Formula** to scan the graph and "snap" their location to the nearest valid road intersection.
-- **Algorithmic Dispatching:** Finding the closest driver isn't just about straight-line distance. The `NearestDriverStrategy` executes **Dijkstra's Shortest Path Algorithm** using a `PriorityQueue` to calculate the actual road-time required for every online driver to reach the passenger, guaranteeing the dispatch of the mathematically fastest car.
+### 1. Real-World Graph Routing (A* + Dijkstra)
+- **Map Ingestion:** The engine natively loads OpenStreetMap (Overpass API) data containing **~99,000 nodes** representing the sprawling streets of New Delhi.
+- **Coordinate Snapping (QuadTree):** When a user requests a ride from a random GPS coordinate, the engine uses a custom-built **QuadTree Spatial Index** to aggressively prune the search space and snap their location to the nearest valid road intersection in `O(log N)` time.
+- **Algorithmic Dispatching (SpatialGrid + Dijkstra):** Finding the closest driver isn't just about straight-line distance. The `NearestDriverStrategy` first uses a **SpatialGrid** to fetch drivers physically located in the local 6km zone in `O(1)` time. It then executes **Dijkstra's Shortest Path Algorithm** on those local drivers to calculate the actual road-time required to reach the passenger, guaranteeing the dispatch of the mathematically fastest car without wasting CPU cycles on distant drivers.
 
 ### 2. Enterprise-Grade System Architecture
 The codebase strictly adheres to **SOLID Principles** and leverages industry-standard **Design Patterns** to ensure it is highly scalable and maintainable:
@@ -34,10 +39,10 @@ RouteHub is designed to be highly efficient, treating the city as a massive math
 
 | Operation | Algorithm Used | Time Complexity | Description |
 | :--- | :--- | :--- | :--- |
-| **Graph Initialization** | Adjacency List Parsing | `O(V + E)` | Reads the raw CSV data into memory and constructs the HashMap-based graph. |
-| **Coordinate Snapping** | Linear Search (Haversine) | `O(V)` | Scans all `100,000+` nodes to find the closest valid street intersection to a raw GPS ping. *(Can be optimized to `O(log V)` using a QuadTree).* |
-| **Estimate Routing** | Dijkstra's Shortest Path | `O((V + E) log V)` | Uses a `PriorityQueue` (Min-Heap) to calculate the shortest mathematical path between the pickup and dropoff nodes. |
-| **Dispatch Nearest Driver**| Multi-Target Dijkstra | `O(D * ((V + E) log V))`| Calculates the exact driving time from the passenger to every online driver ($D$), rather than relying on inaccurate straight-line distance, to guarantee the fastest pickup. |
+| **Graph Initialization** | Adjacency List Parsing | `O(V + E)` | Reads the raw CSV data into memory, constructs the HashMap-based graph, and populates the QuadTree. |
+| **Coordinate Snapping** | QuadTree Search | `O(log V)` | Recursively searches the geographic QuadTree bounding boxes to snap a GPS ping to the nearest intersection. |
+| **Estimate Routing** | A* Search / Dijkstra | `O((V + E) log V)` | Uses a `PriorityQueue` (Min-Heap) and Haversine heuristic to calculate the shortest mathematical path. |
+| **Dispatch Nearest Driver**| SpatialGrid + Dijkstra | `O(1) + O(L * ((V+E)logV))`| Uses a 2km x 2km bucket grid `O(1)` to fetch local drivers ($L$), then calculates exact driving time to pick the absolute fastest driver. |
 
 ---
 
@@ -121,8 +126,14 @@ graph TD
     MS -.->|Uses| NS
 
     %% Data & Map Layer
-    CM[("CityMap Singleton<br/>100k Nodes / 400k Edges")]:::infrastructure
+    CM[("CityMap Singleton<br/>99k Nodes / Edges")]:::infrastructure
+    QT[{"QuadTree<br/>O(log N) Snapping"}]:::infrastructure
+    SG[{"SpatialGrid<br/>O(1) Driver Locating"}]:::infrastructure
+    
     NS --> CM
+    CM --> QT
+    MS --> SG
+    MS -.->|Uses| NS
 
     Repo[("CrudRepositories<br/>InMemory / SQL")]:::repository
     US --> Repo
@@ -162,8 +173,8 @@ Admin> demo
 The system will automatically:
 1. Register a test Passenger.
 2. Register 3 different Drivers (Economy, SUV, Premium).
-3. Distribute those drivers across different real-world coordinates in the Manhattan bounding box and set them `ONLINE`.
-4. Generate the exact `estimateRide` command for you to copy and paste to test the Dijkstra routing engine instantly.
+3. Distribute those drivers across different real-world coordinates in the Delhi bounding box and set them `ONLINE`.
+4. Generate the exact `estimateRide` command for you to copy and paste to test the A* routing engine instantly.
 
 From there, simply follow the on-screen prompts. The console will tell you exactly what command to copy and paste next to progress the ride through its lifecycle (`estimateRide` -> `confirmRide` -> `startRide` -> `completeRide` -> `rateAndPay`).
 
@@ -179,16 +190,17 @@ src/
 ├── observers/            # Notification system implementations
 ├── repositories/         # Data persistence layer
 ├── services/             # Core business logic orchestrators
-└── strategies/           # Interchangeable algorithms (Pricing, Matching, Routing)
-map_nodes.csv             # 100,000+ Manhattan road intersections (Latitude/Longitude)
-map_edges.csv             # 33,000+ road connections
+├── strategies/           # Interchangeable algorithms (Pricing, Matching, Routing)
+└── utils/                # SpatialGrid, QuadTree, Math Utilities
+map_nodes.csv             # ~99,000 New Delhi road intersections (Latitude/Longitude)
+map_edges.csv             # Road connections
 ```
 
 ---
 
 ## 🧠 Future Roadmap
 - **Multithreading:** Implement a concurrency model to simulate 100+ passengers booking simultaneously, demonstrating thread safety with `ReentrantLocks`.
-- **A* Pathfinding:** Introduce an A* Search `NavigationStrategy` using a heuristic function to optimize the graph traversal even further. 
 - **Database Integration:** Swap the `InMemoryRepositories` with `SQLRepositories` using JDBC.
+- **Path Divergence Analysis:** Configure A* to optimize for Time (speed limits) and Dijkstra to optimize for Distance (km) to benchmark how often they diverge in a real city.
 
 *Designed and engineered as a showcase of algorithmic efficiency and software design.*
