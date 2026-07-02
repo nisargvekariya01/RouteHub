@@ -55,7 +55,7 @@ graph TD
     classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
     %% Client Layer
-    Dashboard[💻 ConsoleDashboard REPL]:::client
+    Dashboard["💻 ConsoleDashboard REPL"]:::client
 
     %% Service Layer
     US[UserService]:::service
@@ -69,9 +69,9 @@ graph TD
     Dashboard --> PS
 
     %% Strategy Layer (Injected dependencies)
-    MS[DriverMatchingStrategy<br/><i>(NearestDriver)</i>]:::strategy
-    NS[NavigationStrategy<br/><i>(Dijkstra)</i>]:::strategy
-    FS[FareStrategy<br/><i>(Standard/Luxury)</i>]:::strategy
+    MS["DriverMatchingStrategy<br/><i>(NearestDriver)</i>"]:::strategy
+    NS["NavigationStrategy<br/><i>(Dijkstra)</i>"]:::strategy
+    FS["FareStrategy<br/><i>(Standard/Luxury)</i>"]:::strategy
 
     RS --> MS
     RS --> FS
@@ -80,16 +80,16 @@ graph TD
     MS -.->|Uses| NS
 
     %% Data & Map Layer
-    CM[(CityMap Singleton<br/>15k Nodes / 33k Edges)]:::infrastructure
+    CM[("CityMap Singleton<br/>15k Nodes / 33k Edges")]:::infrastructure
     NS --> CM
 
-    Repo[(CrudRepositories<br/>InMemory / SQL)]:::repository
+    Repo[("CrudRepositories<br/>InMemory / SQL")]:::repository
     US --> Repo
     DS --> Repo
     RS --> Repo
     
     %% Observer Layer
-    Notify[NotificationService<br/><i>Observer Pattern</i>]:::infrastructure
+    Notify["NotificationService<br/><i>Observer Pattern</i>"]:::infrastructure
     RS -.->|Broadcasts Events| Notify
 ```
 
