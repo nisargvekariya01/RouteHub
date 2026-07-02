@@ -98,20 +98,37 @@ graph TD
 └── map_edges.csv         # Road connections
 ```
 
-## ⏱ Algorithmic Time Complexity
-RouteHub is designed to be highly efficient, treating the city as a massive mathematical graph where $V$ is the number of intersections (Nodes) and $E$ is the number of road segments (Edges).
+## ⏱ Time Complexity of Operations
+Let $V$ = number of nodes (intersections) and $E$ = number of edges (roads).
 
-| Operation | Algorithm Used | Time Complexity | Description |
+### Graph Operations
+| Operation | Time Complexity | Explanation |
+| :--- | :--- | :--- |
+| **Add Node** | `O(1)` | Direct HashMap insertion during data parsing. |
+| **Add Edge** | `O(1)` | Instantly appends connection to the Adjacency List. |
+| **Get Neighbors**| `O(1)` | Direct HashMap lookup for adjacent nodes. |
+| **Get Node by ID**| `O(1)` | Direct HashMap lookup. |
+
+### QuadTree Operations
+| Operation | Average Case | Worst Case | Explanation |
 | :--- | :--- | :--- | :--- |
-| **Graph Initialization** | Adjacency List Parsing | `O(V + E)` | Reads the raw CSV data into memory, constructs the HashMap-based graph, and populates the QuadTree. |
-| **Coordinate Snapping** | QuadTree Search | `O(log V)` | Recursively searches the geographic QuadTree bounding boxes to snap a GPS ping to the nearest intersection. |
-| **Estimate Routing** | A* Search / Dijkstra | `O((V + E) log V)` | Uses a `PriorityQueue` (Min-Heap) and Haversine heuristic to calculate the shortest mathematical path. |
-| **Dispatch Nearest Driver**| SpatialGrid + Dijkstra | `O(1) + O(L * ((V+E)logV))`| Uses a 2km x 2km bucket grid `O(1)` to fetch local drivers ($L$), then calculates exact driving time to pick the absolute fastest driver. |
-| **Update Driver Location** | SpatialGrid Hashing | `O(1)` | Rehashes the driver's GPS coordinate to a Grid Bucket and moves their ID in memory instantaneously. |
-| **Register User/Driver** | HashMap Insertion | `O(1)` | Persists a new entity into the `CrudRepository` using an in-memory HashMap. |
-| **Start/Complete Ride** | State Machine | `O(1)` | Validates the lifecycle transition and updates the `Ride` object status. |
-| **Payment Processing** | Strategy Execution | `O(1)` | Executes the dynamically injected `PaymentMethod` (Cash, Card, UPI). |
-| **Event Broadcasting** | Observer Pattern | `O(S)` | Iterates through $S$ subscribed notification services (Console, SMS, Email) to alert users. |
+| **Insert** | `O(log V)` | `O(V)` | Recursively subdivides space; degrades only if all points are co-located in the exact same spot. |
+| **Nearest Neighbor**| `O(log V)` | `O(V)` | Branch-and-bound pruning safely skips irrelevant geographic quadrants to instantly snap coordinates. |
+
+### Routing Algorithms
+| Algorithm | Time Complexity | Space Complexity | Explanation |
+| :--- | :--- | :--- | :--- |
+| **Dijkstra** | `O((V + E) log V)` | `O(V)` | Min-heap priority queue; guarantees absolute shortest path. |
+| **A* Search** | `O((V + E) log V)` | `O(V)` | Same mathematical worst-case as Dijkstra, but the geographic heuristic severely prunes the search space, exploring drastically fewer nodes in practice. |
+| **Dispatch Driver** | `O(1) + O(L log L)`| `O(L)` | `O(1)` to fetch local drivers via SpatialGrid bucket, then calculates paths for those $L$ nearby drivers instead of the whole city. |
+
+### Application Lifecycle
+| Operation | Time Complexity | Explanation |
+| :--- | :--- | :--- |
+| **Update Driver GPS**| `O(1)` | `SpatialGrid` rehashes the driver's location to a 2km sector Bucket instantly. |
+| **Register Entity** | `O(1)` | `CrudRepository` inserts the Passenger/Driver into memory. |
+| **Start/Complete** | `O(1)` | State machine validates transition and updates the `Ride` status. |
+| **Process Payment** | `O(1)` | Dynamic strategy injection instantly executes Cash/Card/UPI algorithm. |
 
 ---
 
