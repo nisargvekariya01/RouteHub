@@ -2,7 +2,6 @@ package strategies.pricing;
 
 import models.Ride;
 import models.enums.VehicleType;
-import utils.DistanceCalculator;
 
 /**
  * Standard implementation of the FareStrategy.

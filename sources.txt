@@ -47,4 +47,3 @@
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/FareStrategy.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/LuxuryFareStrategy.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/StandardFareStrategy.java"
-"C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/utils/DistanceCalculator.java"
