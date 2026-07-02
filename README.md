@@ -17,11 +17,11 @@ RouteHub was built from the ground up using **SOLID Principles**. This diagram i
 ```mermaid
 graph TD
     %% Core Styling
-    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef service fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef strategy fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5;
-    classDef repo fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
-    classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px,color:#000;
+    classDef service fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000;
+    classDef strategy fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5,color:#000;
+    classDef repo fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000;
+    classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
 
     %% Entry
     REPL["💻 ConsoleDashboard (CLI)"]:::client
@@ -51,8 +51,8 @@ graph TD
     %% Infrastructure & Math
     subgraph Data & Spatial Layer
         CM[("CityMap Singleton<br>~99k Nodes")]:::infra
-        QT[{"QuadTree<br>O(log N) Snap"}]:::infra
-        SG[{"SpatialGrid<br>O(1) Sector"}]:::infra
+        QT["QuadTree<br>O(log N) Snap"]:::infra
+        SG["SpatialGrid<br>O(1) Sector"]:::infra
     end
 
     NS --> CM
