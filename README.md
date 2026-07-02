@@ -1,21 +1,19 @@
-# 🚗 RouteHub: Algorithmic Ride-Sharing Backend
+# RouteHub: Algorithmic Ride-Sharing Backend
 
 ![Java](https://img.shields.io/badge/Java-8%2B-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=for-the-badge)
 ![Algorithms](https://img.shields.io/badge/Algorithms-Dijkstra%20%7C%20A*-blue?style=for-the-badge)
 ![Spatial Indexing](https://img.shields.io/badge/Data%20Structures-QuadTree-purple?style=for-the-badge)
 
-Welcome to **RouteHub**! 
+RouteHub is a high-performance, pure-Java backend routing engine designed to process real-world geographic data, prioritizing mathematical precision over simple coordinate geometry. 
 
-Most ride-sharing clones just draw a straight line between Point A and Point B. **RouteHub is different.** 
+Built from the ground up with strict adherence to Clean Architecture and SOLID principles, the engine ingests geographical maps of New Delhi (99,000+ intersections), constructs a massive graph network, and executes advanced algorithms (A* and Dijkstra) to dispatch vehicles based on true road-network traversal times rather than straight-line estimates.
 
-This is a pure-Java backend engine built from the ground up to handle **real-world graph routing** and robust system design. It loads actual geographical data of New Delhi, maps it into a graph of over 99,000 intersections, and uses **A* and Dijkstra's Algorithms** to dispatch the truly fastest driver to a passenger's location based on actual road networks.
-
-Built with **Zero Frameworks** and **Zero External Libraries**, RouteHub is a showcase of raw algorithmic problem solving, Clean Architecture, and SOLID principles.
+This repository serves as a showcase of raw algorithmic problem-solving, utilizing zero external frameworks or libraries.
 
 ---
 
-## ⚡ Core Technical Achievements
+## Core Technical Achievements
 
 ### 1. Real-World Graph Routing (A* + Dijkstra)
 - **Map Ingestion:** The engine natively loads OpenStreetMap (Overpass API) data containing **~99,000 nodes** representing the sprawling streets of New Delhi.
@@ -34,7 +32,7 @@ RouteHub features a custom-built, interactive Command-Line Interface (CLI) that 
 
 ---
 
-## ⏱ Algorithmic Time Complexity
+## Algorithmic Time Complexity
 RouteHub is designed to be highly efficient, treating the city as a massive mathematical graph where $V$ is the number of intersections (Nodes) and $E$ is the number of road segments (Edges).
 
 | Operation | Algorithm Used | Time Complexity | Description |
@@ -46,7 +44,7 @@ RouteHub is designed to be highly efficient, treating the city as a massive math
 
 ---
 
-## 🏎️ Algorithm Benchmark (Dijkstra vs A*)
+## Algorithm Benchmark (Dijkstra vs A*)
 
 The routing engine contains a built-in benchmark script to run thousands of calculations across a large map spanning ~100,000 nodes. Here are the 20-iteration average benchmarking results comparing traditional Dijkstra against the optimized A* Search on a 21.48 km diagonal cross-city route:
 
@@ -66,7 +64,7 @@ On average, A* was 1.62x faster than Dijkstra.
 
 ---
 
-## 🌲 Spatial Index Benchmark (QuadTree vs Linear Scan)
+## Spatial Index Benchmark (QuadTree vs Linear Scan)
 
 Coordinate snapping (finding the nearest road to a GPS ping) is traditionally an `O(N)` operation. We built a custom `QuadTree` to recursively divide the map into geographic quadrants, aggressively pruning the search space to achieve `O(log N)` lookups. Here are the results of 2,000 random pings across the 99,000-node graph:
 
@@ -87,7 +85,7 @@ At N = 99088 nodes the QuadTree is 734.8x faster than a linear scan.
 
 ---
 
-## 🏗 System Architecture Diagram
+## System Architecture Diagram
 
 RouteHub was built from the ground up using **SOLID Principles**. This diagram illustrates the strict decoupling between the Presentation Layer (CLI), the Core Services, and the highly modular Strategy/Repository implementations.
 
@@ -101,7 +99,7 @@ graph TD
     classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
     %% Client Layer
-    Dashboard["💻 ConsoleDashboard REPL"]:::client
+    Dashboard["ConsoleDashboard REPL"]:::client
 
     %% Service Layer
     US[UserService]:::service
@@ -147,7 +145,7 @@ graph TD
 
 ---
 
-## 🚀 How to Run the Project
+## Execution Guide
 
 Since RouteHub relies on zero external dependencies, running it is incredibly easy.
 
@@ -163,24 +161,26 @@ Since RouteHub relies on zero external dependencies, running it is incredibly ea
    ```
 3. You will be greeted by the `Admin>` prompt and a confirmation that the 100,000-node graph was successfully loaded into memory.
 
-### Running the Interactive Demo
-Don't want to type out UUIDs and GPS coordinates manually? Just type `demo`!
+### Automated Integration Testing
+To bypass manual UUID entry and rapidly test the routing engine's lifecycle, invoke the integrated demo script:
 
 ```text
 Admin> demo
 ```
 
-The system will automatically:
-1. Register a test Passenger.
-2. Register 3 different Drivers (Economy, SUV, Premium).
-3. Distribute those drivers across different real-world coordinates in the Delhi bounding box and set them `ONLINE`.
-4. Generate the exact `estimateRide` command for you to copy and paste to test the A* routing engine instantly.
+The sequence executes the following automated bootstrapping:
+1. Registers a mock Passenger profile.
+2. Initializes three distinct Driver entities (Economy, SUV, Premium).
+3. Distributes the drivers across varying coordinates within the New Delhi bounding box, transitioning their statuses to `ONLINE`.
+4. Outputs the precise `estimateRide` command required to invoke the A* routing engine.
 
-From there, simply follow the on-screen prompts. The console will tell you exactly what command to copy and paste next to progress the ride through its lifecycle (`estimateRide` -> `confirmRide` -> `startRide` -> `completeRide` -> `rateAndPay`).
+Follow the subsequent on-screen terminal instructions to manually step through the state machine transitions (`estimateRide` -> `confirmRide` -> `startRide` -> `completeRide` -> `rateAndPay`).
+
+
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 src/
@@ -198,7 +198,7 @@ map_edges.csv             # Road connections
 
 ---
 
-## 🧠 Future Roadmap
+## Future Technical Roadmap
 - **Multithreading:** Implement a concurrency model to simulate 100+ passengers booking simultaneously, demonstrating thread safety with `ReentrantLocks`.
 - **Database Integration:** Swap the `InMemoryRepositories` with `SQLRepositories` using JDBC.
 - **Path Divergence Analysis:** Configure A* to optimize for Time (speed limits) and Dijkstra to optimize for Distance (km) to benchmark how often they diverge in a real city.
