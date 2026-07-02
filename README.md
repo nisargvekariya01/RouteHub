@@ -1,10 +1,5 @@
 # 🚗 RouteHub: Algorithmic Ride-Sharing Backend
 
-![Java](https://img.shields.io/badge/Java-8%2B-ED8B00?style=for-the-badge&logo=java&logoColor=white)
-![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=for-the-badge)
-![Algorithms](https://img.shields.io/badge/Algorithms-Dijkstra%20%7C%20A*-blue?style=for-the-badge)
-![Spatial Indexing](https://img.shields.io/badge/Data%20Structures-QuadTree-purple?style=for-the-badge)
-
 Welcome to **RouteHub**! 
 
 Most ride-sharing clones just draw a straight line between Point A and Point B. **RouteHub is different.** 
@@ -15,22 +10,67 @@ Built with **Zero Frameworks** and **Zero External Libraries**, RouteHub is a sh
 
 ---
 
-## ⚡ Core Technical Achievements
+## 🏗 System Architecture Diagram
 
-### 1. Real-World Graph Routing (A* + Dijkstra)
-- **Map Ingestion:** The engine natively loads OpenStreetMap (Overpass API) data containing **~99,000 nodes** representing the sprawling streets of New Delhi.
-- **Coordinate Snapping (QuadTree):** When a user requests a ride from a random GPS coordinate, the engine uses a custom-built **QuadTree Spatial Index** to aggressively prune the search space and snap their location to the nearest valid road intersection in `O(log N)` time.
-- **Algorithmic Dispatching (SpatialGrid + Dijkstra):** Finding the closest driver isn't just about straight-line distance. The `NearestDriverStrategy` first uses a **SpatialGrid** to fetch drivers physically located in the local 6km zone in `O(1)` time. It then executes **Dijkstra's Shortest Path Algorithm** on those local drivers to calculate the actual road-time required to reach the passenger, guaranteeing the dispatch of the mathematically fastest car without wasting CPU cycles on distant drivers.
+RouteHub was built from the ground up using **SOLID Principles**. This diagram illustrates the strict decoupling between the Presentation Layer (CLI), the Core Services, the Spatial Data Structures, and the highly modular Strategy implementations.
 
-### 2. Enterprise-Grade System Architecture
-The codebase strictly adheres to **SOLID Principles** and leverages industry-standard **Design Patterns** to ensure it is highly scalable and maintainable:
-- **Strategy Pattern:** Pricing (`FareStrategy`) and routing algorithms (`NavigationStrategy`) are decoupled. Want to switch from Standard Pricing to Surge Pricing, or from Dijkstra to A* Search? Just swap the strategy object at runtime.
-- **Repository Pattern:** All data access is abstracted behind `CrudRepository` interfaces, allowing the backend to seamlessly transition from in-memory lists to a real SQL database in the future without changing business logic.
-- **Observer Pattern:** A `NotificationService` actively listens to the `RideService` to broadcast state changes (e.g., "Ride Started", "Payment Processed") via Console/Email/SMS without tightly coupling the systems.
-- **Builder Pattern:** Complex `Ride` objects are safely constructed using immutable builders.
+```mermaid
+graph TD
+    %% Core Styling
+    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef service fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef strategy fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef repo fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
-### 3. Interactive REPL Dashboard
-RouteHub features a custom-built, interactive Command-Line Interface (CLI) that acts as an Admin Dashboard. It parses user input dynamically and provides a seamless "copy-paste" UX for stepping through a complete ride lifecycle (from request, to dispatch, to payment).
+    %% Entry
+    REPL["💻 ConsoleDashboard (CLI)"]:::client
+
+    %% Services
+    subgraph Service Layer
+        US[UserService]:::service
+        DS[DriverService]:::service
+        RS[RideService]:::service
+        PS[PaymentService]:::service
+    end
+
+    REPL --> US & DS & RS & PS
+
+    %% Strategies
+    subgraph Strategy Layer
+        FS["FareStrategy<br>(Standard, Luxury)"]:::strategy
+        NS["NavigationStrategy<br>(A*, Dijkstra)"]:::strategy
+        MS["DriverMatchingStrategy<br>(NearestDriver)"]:::strategy
+        PM["PaymentMethod<br>(Cash, Card, UPI)"]:::strategy
+    end
+
+    RS --> FS & NS & MS
+    PS --> PM
+    MS -.->|Injects| NS
+
+    %% Infrastructure & Math
+    subgraph Data & Spatial Layer
+        CM[("CityMap Singleton<br>~99k Nodes")]:::infra
+        QT[{"QuadTree<br>O(log N) Snap"}]:::infra
+        SG[{"SpatialGrid<br>O(1) Sector"}]:::infra
+    end
+
+    NS --> CM
+    CM --> QT
+    MS --> SG
+    DS --> SG
+
+    %% Persistence
+    subgraph Persistence Layer
+        DB[("CrudRepositories<br>In-Memory")]:::repo
+    end
+
+    US & DS & RS --> DB
+
+    %% Observer
+    Notify["NotificationFactory<br>(SMS, Email, Console)"]:::infra
+    RS -.->|Broadcasts| Notify
+```
 
 ---
 
@@ -85,65 +125,7 @@ At N = 99088 nodes the QuadTree is 734.8x faster than a linear scan.
 =====================================================
 ```
 
----
 
-## 🏗 System Architecture Diagram
-
-RouteHub was built from the ground up using **SOLID Principles**. This diagram illustrates the strict decoupling between the Presentation Layer (CLI), the Core Services, and the highly modular Strategy/Repository implementations.
-
-```mermaid
-graph TD
-    %% Core Styling
-    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef service fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef strategy fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5;
-    classDef repository fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
-    classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
-
-    %% Client Layer
-    Dashboard["💻 ConsoleDashboard REPL"]:::client
-
-    %% Service Layer
-    US[UserService]:::service
-    DS[DriverService]:::service
-    RS[RideService]:::service
-    PS[PaymentService]:::service
-
-    Dashboard --> US
-    Dashboard --> DS
-    Dashboard --> RS
-    Dashboard --> PS
-
-    %% Strategy Layer (Injected dependencies)
-    MS["DriverMatchingStrategy<br/><i>(NearestDriver)</i>"]:::strategy
-    NS["NavigationStrategy<br/><i>(Dijkstra)</i>"]:::strategy
-    FS["FareStrategy<br/><i>(Standard/Luxury)</i>"]:::strategy
-
-    RS --> MS
-    RS --> FS
-    RS --> NS
-    
-    MS -.->|Uses| NS
-
-    %% Data & Map Layer
-    CM[("CityMap Singleton<br/>99k Nodes / Edges")]:::infrastructure
-    QT[{"QuadTree<br/>O(log N) Snapping"}]:::infrastructure
-    SG[{"SpatialGrid<br/>O(1) Driver Locating"}]:::infrastructure
-    
-    NS --> CM
-    CM --> QT
-    MS --> SG
-    MS -.->|Uses| NS
-
-    Repo[("CrudRepositories<br/>InMemory / SQL")]:::repository
-    US --> Repo
-    DS --> Repo
-    RS --> Repo
-    
-    %% Observer Layer
-    Notify["NotificationService<br/><i>Observer Pattern</i>"]:::infrastructure
-    RS -.->|Broadcasts Events| Notify
-```
 
 ---
 
