@@ -95,11 +95,14 @@ public class ConsoleDashboard {
                     case "completeride":
                         handleCompleteRide(args);
                         break;
-                    case "pay":
-                        handlePay(args);
+                    case "rateandpay":
+                        handleRateAndPay(args);
                         break;
                     case "history":
                         handleHistory(args);
+                        break;
+                    case "demo":
+                        handleDemo();
                         break;
                     case "help":
                         printHelp();
@@ -129,9 +132,10 @@ public class ConsoleDashboard {
         System.out.println("  estimateRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
         System.out.println("  confirmRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
         System.out.println("  startRide <rideId> <driverId>");
-        System.out.println("  completeRide <rideId> <rating>");
-        System.out.println("  pay <rideId> <CASH|CARD|UPI>");
+        System.out.println("  completeRide <rideId>");
+        System.out.println("  rateAndPay <rideId> <rating(1-5)> <CASH|CARD|UPI>");
         System.out.println("  history <userId>");
+        System.out.println("  demo");
         System.out.println("  exit");
     }
 
@@ -184,35 +188,45 @@ public class ConsoleDashboard {
         
         Ride ride = rideService.confirmRide(p, pickup, dropoff);
         System.out.println("Ride Successfully Booked! [Ride ID: " + ride.getId() + "]");
+        System.out.println("=> Type 'startRide " + ride.getId() + " " + ride.getDriver().getId() + "' to begin the trip.");
     }
 
     private void handleStartRide(String[] args) {
         Ride ride = rideService.startRide(args[1], args[2]);
         System.out.println("Ride " + ride.getId() + " has officially started.");
+        System.out.println("=> Type 'completeRide " + ride.getId() + "' to finish the trip.");
     }
 
     private void handleCompleteRide(String[] args) {
-        if (args.length < 3) {
-            throw new IllegalArgumentException("Usage: completeRide <rideId> <rating 1-5>");
+        if (args.length < 2) {
+            throw new IllegalArgumentException("Usage: completeRide <rideId>");
         }
-        int rating = Integer.parseInt(args[2]);
         Ride ride = rideService.completeRide(args[1], false);
         
-        // Passenger rates the driver upon completion
-        driverService.rateDriver(ride.getDriver().getId(), rating);
-        
         System.out.println("Ride " + ride.getId() + " is complete. Fare due: $" + String.format("%.2f", ride.getFare()));
-        System.out.println("Passenger rated Driver " + ride.getDriver().getName() + " " + rating + " stars!");
+        System.out.println("\n[NOTIFICATION TO PASSENGER]: Your ride has reached its destination.");
+        System.out.println("=> Please submit your payment and rate your driver.");
+        System.out.println("=> Type 'rateAndPay " + args[1] + " <rating(1-5)> <CASH|CARD|UPI>' to finalize the trip.");
     }
 
-    private void handlePay(String[] args) {
+    private void handleRateAndPay(String[] args) {
+        if (args.length < 4) {
+            throw new IllegalArgumentException("Usage: rateAndPay <rideId> <rating> <CASH|CARD|UPI>");
+        }
+        
         Ride ride = rideService.viewAllRides().stream()
                 .filter(r -> r.getId().equals(args[1]))
                 .findFirst()
                 .orElseThrow(() -> new RideShareException("Ride not found."));
                 
+        // 1. Process Rating
+        int rating = Integer.parseInt(args[2]);
+        driverService.rateDriver(ride.getDriver().getId(), rating);
+        System.out.println("Passenger rated Driver " + ride.getDriver().getName() + " " + rating + " stars!");
+        
+        // 2. Process Payment
         PaymentMethod method;
-        switch(args[2].toUpperCase()) {
+        switch(args[3].toUpperCase()) {
             case "CASH": method = new CashPayment(); break;
             case "CARD": method = new CardPayment(); break;
             case "UPI": method = new UpiPayment(); break;
@@ -221,7 +235,8 @@ public class ConsoleDashboard {
         
         Payment payment = paymentService.createPayment(ride.getId(), ride.getFare());
         paymentService.processPayment(payment, method);
-        System.out.println("Payment processed successfully.");
+        System.out.println("Payment of $" + String.format("%.2f", ride.getFare()) + " processed successfully via " + args[3].toUpperCase() + ".");
+        System.out.println("Trip is fully concluded. Thank you for riding!");
     }
 
     private void handleHistory(String[] args) {
@@ -246,6 +261,41 @@ public class ConsoleDashboard {
         }
         
         throw new RideShareException("User ID not found in system.");
+    }
+
+    private void handleDemo() {
+        System.out.println("--- Bootstrapping Demo Data ---");
+        
+        // Register Demo Passenger
+        Passenger passenger = userService.registerPassenger("Demo Passenger", "555-0000");
+        System.out.println("Registered Passenger: " + passenger.getName() + " [ID: " + passenger.getId() + "]");
+        
+        // Register and Place Drivers across Manhattan
+        app.CityMap map = app.CityMap.getInstance();
+        double latSpan = map.getMaxLat() - map.getMinLat();
+        double lonSpan = map.getMaxLon() - map.getMinLon();
+        
+        // Driver 1: Bottom Left
+        Driver d1 = driverService.registerDriver("Driver Alice", "555-1111", new Vehicle("L1", "Toyota", "Camry", VehicleType.ECONOMY));
+        d1.goOnline();
+        d1.setCurrentLocation(new Location(map.getMinLat() + (latSpan * 0.2), map.getMinLon() + (lonSpan * 0.2)));
+        System.out.println("Online Driver: " + d1.getName() + " [ID: " + d1.getId() + "] (Economy)");
+
+        // Driver 2: Middle
+        Driver d2 = driverService.registerDriver("Driver Bob", "555-2222", new Vehicle("L2", "Honda", "CRV", VehicleType.SUV));
+        d2.goOnline();
+        d2.setCurrentLocation(new Location(map.getMinLat() + (latSpan * 0.5), map.getMinLon() + (lonSpan * 0.5)));
+        System.out.println("Online Driver: " + d2.getName() + " [ID: " + d2.getId() + "] (SUV)");
+
+        // Driver 3: Top Right
+        Driver d3 = driverService.registerDriver("Driver Charlie", "555-3333", new Vehicle("L3", "BMW", "5-Series", VehicleType.PREMIUM));
+        d3.goOnline();
+        d3.setCurrentLocation(new Location(map.getMinLat() + (latSpan * 0.8), map.getMinLon() + (lonSpan * 0.8)));
+        System.out.println("Online Driver: " + d3.getName() + " [ID: " + d3.getId() + "] (Premium)");
+        
+        System.out.println("\nDemo data populated successfully! Drivers are scattered across the map.");
+        System.out.println("To test the Dijkstra routing engine, copy and paste this command:");
+        System.out.println("estimateRide " + passenger.getId() + " " + map.getMinLat() + " " + map.getMinLon() + " " + map.getMaxLat() + " " + map.getMaxLon());
     }
 
     private double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
