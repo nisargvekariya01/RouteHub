@@ -132,7 +132,9 @@ Let $V$ = number of nodes (intersections) and $E$ = number of edges (roads).
 
 ---
 
-## 🏎️ Algorithm Benchmark (Dijkstra vs A*)
+## 📊 Performance Benchmarks
+
+### 🏎️ Algorithm Benchmark (Dijkstra vs A*)
 
 The routing engine contains a built-in benchmark script to run thousands of calculations across a large map spanning ~100,000 nodes. Here are the 20-iteration average benchmarking results comparing traditional Dijkstra against the optimized A* Search on a 21.48 km diagonal cross-city route:
 
@@ -152,7 +154,7 @@ On average, A* was 1.62x faster than Dijkstra.
 
 ---
 
-## 🌲 Spatial Index Benchmark (QuadTree vs Linear Scan)
+### 🌲 Spatial Index Benchmark (QuadTree vs Linear Scan)
 
 Coordinate snapping (finding the nearest road to a GPS ping) is traditionally an `O(N)` operation. We built a custom `QuadTree` to recursively divide the map into geographic quadrants, aggressively pruning the search space to achieve `O(log N)` lookups. Here are the results of 2,000 random pings across the 99,000-node graph:
 
@@ -175,6 +177,47 @@ At N = 99088 nodes the QuadTree is 734.8x faster than a linear scan.
 
 ---
 
+## 🔄 Ride Lifecycle Workflow
+
+This sequence diagram illustrates exactly how the backend handles a ride request chronologically, from the moment a Passenger pings their raw GPS coordinates to the final payment settlement.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Passenger
+    participant System as RouteHub Engine
+    participant Spatial as QuadTree & SpatialGrid
+    participant Routing as A* Routing Engine
+    actor Driver
+
+    Passenger->>System: Request Ride (Lat, Lon)
+    System->>Spatial: Snap Passenger GPS to nearest Road Node [O(log V)]
+    System->>Spatial: Fetch local Drivers from 2km Sector [O(1)]
+    
+    loop For each local Driver
+        System->>Spatial: Snap Driver GPS to nearest Road Node
+        System->>Routing: Execute A* Search (Driver Node -> Passenger Node)
+    end
+    
+    Routing-->>System: Return mathematically fastest Driver
+    System->>Driver: Dispatch Request
+    Driver-->>System: Accept Ride (Status: ACCEPTED)
+    
+    Note over System,Driver: Driver physically navigates to Passenger...
+    
+    Driver->>System: Pick up Passenger (Status: STARTED)
+    
+    Note over System,Driver: Driver navigates to Destination...
+    
+    Driver->>System: Drop off Passenger (Status: COMPLETED)
+    System->>System: FareStrategy dynamically computes cost
+    System->>Passenger: Request Payment
+    Passenger->>System: Execute PaymentMethod (Cash/Card/UPI)
+    System-->>Passenger: Ride fully settled!
+```
+
+---
+
 ## 🚀 How to Run the Project
 
 Since RouteHub relies on zero external dependencies, running it is incredibly easy.
@@ -185,10 +228,18 @@ Since RouteHub relies on zero external dependencies, running it is incredibly ea
 
 ### Booting the Engine
 1. Clone the repository and navigate to the root directory.
-2. Compile and launch the application using the included script:
-   ```bash
-   ./compile.ps1
+2. Compile and launch the application using the included scripts based on your terminal:
+   
+   **For Windows Command Prompt (CMD):**
+   ```cmd
+   run.bat
    ```
+
+   **For Windows PowerShell:**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File compile.ps1
+   ```
+
 3. You will be greeted by the `Admin>` prompt and a confirmation that the 100,000-node graph was successfully loaded into memory.
 
 ### Running the Interactive Demo
