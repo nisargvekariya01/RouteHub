@@ -29,7 +29,7 @@ public class MapDataFetcher {
     public static void fetchAndSaveMapData() {
         System.out.println("[Map API] Fetching real street network from Overpass API (Manhattan bounding box)...");
         try {
-            // Expanded bounding box for Manhattan to fetch ~10,000+ intersections
+            // Bounding box for Manhattan (~15,000 intersections)
             String query = "[out:json][timeout:90];" +
                            "way[\"highway\"~\"primary|secondary|tertiary|residential\"](40.72,-74.01,40.78,-73.95);" +
                            "out body;" +

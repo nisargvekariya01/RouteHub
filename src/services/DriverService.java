@@ -3,8 +3,10 @@ package services;
 import exceptions.DriverNotFoundException;
 import exceptions.DuplicateUserException;
 import models.Driver;
+import models.Location;
 import models.Vehicle;
 import repositories.DriverRepository;
+import utils.SpatialGrid;
 
 import java.util.List;
 import java.util.UUID;
@@ -55,6 +57,15 @@ public class DriverService {
         driver.addRating(rating);
         driverRepository.update(driver);
         return driver;
+    }
+
+    public void updateDriverLocation(String driverId, Location newLocation) {
+        Driver driver = driverRepository.findById(driverId)
+            .orElseThrow(() -> new DriverNotFoundException("Driver with ID " + driverId + " not found."));
+            
+        // Updates the driver's object state AND syncs them into the correct spatial sector bucket
+        SpatialGrid.getInstance().updateDriverLocation(driver, newLocation);
+        driverRepository.update(driver);
     }
 
     public List<Driver> viewAllDrivers() {

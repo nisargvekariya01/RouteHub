@@ -4,7 +4,7 @@ Welcome to **RouteHub**!
 
 Most ride-sharing clones just draw a straight line between Point A and Point B. **RouteHub is different.** 
 
-This is a pure-Java backend engine built from the ground up to handle **real-world graph routing** and robust system design. It loads actual geographical data of Manhattan, maps it into a graph of over 15,000 intersections, and uses **Dijkstra's Algorithm** to dispatch the truly fastest driver to a passenger's location based on actual road networks.
+This is a pure-Java backend engine built from the ground up to handle **real-world graph routing** and robust system design. It loads actual geographical data of Manhattan, maps it into a graph of over 100,000 intersections, and uses **Dijkstra's Algorithm** to dispatch the truly fastest driver to a passenger's location based on actual road networks.
 
 Built with **Zero Frameworks** and **Zero External Libraries**, RouteHub is a showcase of raw algorithmic problem solving, Clean Architecture, and SOLID principles.
 
@@ -13,7 +13,7 @@ Built with **Zero Frameworks** and **Zero External Libraries**, RouteHub is a sh
 ## ⚡ Core Technical Achievements
 
 ### 1. Real-World Graph Routing (Dijkstra + Haversine)
-- **Map Ingestion:** The engine natively loads OpenStreetMap (Overpass API) data containing **15,165 nodes** and **33,382 road edges** representing the streets of Manhattan.
+- **Map Ingestion:** The engine natively loads OpenStreetMap (Overpass API) data containing **100,489 nodes** and **400,688 road edges** representing the streets of Manhattan.
 - **Coordinate Snapping:** When a user requests a ride from a random GPS coordinate, the engine uses the **Haversine Formula** to scan the graph and "snap" their location to the nearest valid road intersection.
 - **Algorithmic Dispatching:** Finding the closest driver isn't just about straight-line distance. The `NearestDriverStrategy` executes **Dijkstra's Shortest Path Algorithm** using a `PriorityQueue` to calculate the actual road-time required for every online driver to reach the passenger, guaranteeing the dispatch of the mathematically fastest car.
 
@@ -35,7 +35,7 @@ RouteHub is designed to be highly efficient, treating the city as a massive math
 | Operation | Algorithm Used | Time Complexity | Description |
 | :--- | :--- | :--- | :--- |
 | **Graph Initialization** | Adjacency List Parsing | `O(V + E)` | Reads the raw CSV data into memory and constructs the HashMap-based graph. |
-| **Coordinate Snapping** | Linear Search (Haversine) | `O(V)` | Scans all `15,000+` nodes to find the closest valid street intersection to a raw GPS ping. *(Can be optimized to `O(log V)` using a QuadTree).* |
+| **Coordinate Snapping** | Linear Search (Haversine) | `O(V)` | Scans all `100,000+` nodes to find the closest valid street intersection to a raw GPS ping. *(Can be optimized to `O(log V)` using a QuadTree).* |
 | **Estimate Routing** | Dijkstra's Shortest Path | `O((V + E) log V)` | Uses a `PriorityQueue` (Min-Heap) to calculate the shortest mathematical path between the pickup and dropoff nodes. |
 | **Dispatch Nearest Driver**| Multi-Target Dijkstra | `O(D * ((V + E) log V))`| Calculates the exact driving time from the passenger to every online driver ($D$), rather than relying on inaccurate straight-line distance, to guarantee the fastest pickup. |
 
@@ -80,7 +80,7 @@ graph TD
     MS -.->|Uses| NS
 
     %% Data & Map Layer
-    CM[("CityMap Singleton<br/>15k Nodes / 33k Edges")]:::infrastructure
+    CM[("CityMap Singleton<br/>100k Nodes / 400k Edges")]:::infrastructure
     NS --> CM
 
     Repo[("CrudRepositories<br/>InMemory / SQL")]:::repository
@@ -109,7 +109,7 @@ Since RouteHub relies on zero external dependencies, running it is incredibly ea
    ```bash
    ./compile.ps1
    ```
-3. You will be greeted by the `Admin>` prompt and a confirmation that the 15,000-node graph was successfully loaded into memory.
+3. You will be greeted by the `Admin>` prompt and a confirmation that the 100,000-node graph was successfully loaded into memory.
 
 ### Running the Interactive Demo
 Don't want to type out UUIDs and GPS coordinates manually? Just type `demo`!
@@ -139,7 +139,7 @@ src/
 ├── repositories/         # Data persistence layer
 ├── services/             # Core business logic orchestrators
 └── strategies/           # Interchangeable algorithms (Pricing, Matching, Routing)
-map_nodes.csv             # 15,000+ Manhattan road intersections (Latitude/Longitude)
+map_nodes.csv             # 100,000+ Manhattan road intersections (Latitude/Longitude)
 map_edges.csv             # 33,000+ road connections
 ```
 

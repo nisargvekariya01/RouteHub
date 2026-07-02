@@ -6,6 +6,8 @@ import models.Location;
 import models.Ride;
 import models.enums.DriverStatus;
 import repositories.DriverRepository;
+import utils.SpatialGrid;
+import java.util.List;
 
 /**
  * Driver Matching Strategy that uses a real road network Navigation Strategy (Dijkstra)
@@ -31,7 +33,11 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
         Driver nearestDriver = null;
         double minDistance = Double.MAX_VALUE;
 
-        for (Driver driver : driverRepository.findAll()) {
+        // NEW SPATIAL OPTIMIZATION: Fetch drivers ONLY from the local 3x3 grid sector!
+        List<Driver> localDrivers = SpatialGrid.getInstance().getDriversInAdjacentSectors(pickupLocation);
+        System.out.println("[Spatial Index] Found " + localDrivers.size() + " drivers in adjacent sectors to evaluate.");
+
+        for (Driver driver : localDrivers) {
             if (driver.getStatus() == DriverStatus.ONLINE && driver.getCurrentLocation() != null) {
                 // Calculate distance using actual graph routing (Dijkstra) instead of a straight line!
                 double distance = navigationStrategy.getShortestPathDistance(driver.getCurrentLocation(), pickupLocation);

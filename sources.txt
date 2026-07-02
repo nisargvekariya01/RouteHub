@@ -3,6 +3,7 @@
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/app/MapDataFetcher.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/app/RideShareEngine.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/app/SimulationRunner.java"
+"C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/app/SyntheticMapGenerator.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/exceptions/DriverNotFoundException.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/exceptions/DuplicateUserException.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/exceptions/InvalidRideStateException.java"
@@ -47,3 +48,5 @@
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/FareStrategy.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/LuxuryFareStrategy.java"
 "C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/strategies/pricing/StandardFareStrategy.java"
+"C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/utils/AccurateDistanceCalculator.java"
+"C:/Users/NISARG VEKARIYA/Desktop/Ride-Share-Engine/src/utils/SpatialGrid.java"

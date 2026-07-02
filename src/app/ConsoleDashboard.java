@@ -17,6 +17,7 @@ import strategies.payment.CardPayment;
 import strategies.payment.CashPayment;
 import strategies.payment.PaymentMethod;
 import strategies.payment.UpiPayment;
+import utils.AccurateDistanceCalculator;
 
 import java.util.Scanner;
 
@@ -52,8 +53,8 @@ public class ConsoleDashboard {
         
         app.CityMap map = app.CityMap.getInstance();
         
-        double widthKm = calculateDistanceKm(map.getMinLat(), map.getMinLon(), map.getMinLat(), map.getMaxLon());
-        double heightKm = calculateDistanceKm(map.getMinLat(), map.getMinLon(), map.getMaxLat(), map.getMinLon());
+        double widthKm = AccurateDistanceCalculator.calculateDistance(map.getMinLat(), map.getMinLon(), map.getMinLat(), map.getMaxLon());
+        double heightKm = AccurateDistanceCalculator.calculateDistance(map.getMinLat(), map.getMinLon(), map.getMaxLat(), map.getMinLon());
         double areaKm2 = widthKm * heightKm;
 
         System.out.println("Map Bounds Loaded:");
@@ -157,7 +158,7 @@ public class ConsoleDashboard {
                 .findFirst()
                 .orElseThrow(() -> new RideShareException("Driver not found."));
         d.goOnline();
-        d.setCurrentLocation(new Location(Double.parseDouble(args[2]), Double.parseDouble(args[3])));
+        driverService.updateDriverLocation(d.getId(), new Location(Double.parseDouble(args[2]), Double.parseDouble(args[3])));
         System.out.println("Driver " + d.getName() + " is now ONLINE at location (" + args[2] + ", " + args[3] + ").");
     }
 
@@ -270,42 +271,31 @@ public class ConsoleDashboard {
         Passenger passenger = userService.registerPassenger("Demo Passenger", "555-0000");
         System.out.println("Registered Passenger: " + passenger.getName() + " [ID: " + passenger.getId() + "]");
         
-        // Register and Place Drivers across Manhattan
+        // Register and Place Drivers on specific 100k grid coordinates
         app.CityMap map = app.CityMap.getInstance();
-        double latSpan = map.getMaxLat() - map.getMinLat();
-        double lonSpan = map.getMaxLon() - map.getMinLon();
         
-        // Driver 1: Bottom Left
+        // Driver 1: Bottom Left (40.61, -74.14)
         Driver d1 = driverService.registerDriver("Driver Alice", "555-1111", new Vehicle("L1", "Toyota", "Camry", VehicleType.ECONOMY));
         d1.goOnline();
-        d1.setCurrentLocation(new Location(map.getMinLat() + (latSpan * 0.2), map.getMinLon() + (lonSpan * 0.2)));
+        driverService.updateDriverLocation(d1.getId(), new Location(40.61, -74.14));
         System.out.println("Online Driver: " + d1.getName() + " [ID: " + d1.getId() + "] (Economy)");
 
-        // Driver 2: Middle
+        // Driver 2: Middle (40.75, -74.00)
         Driver d2 = driverService.registerDriver("Driver Bob", "555-2222", new Vehicle("L2", "Honda", "CRV", VehicleType.SUV));
         d2.goOnline();
-        d2.setCurrentLocation(new Location(map.getMinLat() + (latSpan * 0.5), map.getMinLon() + (lonSpan * 0.5)));
+        driverService.updateDriverLocation(d2.getId(), new Location(40.75, -74.00));
         System.out.println("Online Driver: " + d2.getName() + " [ID: " + d2.getId() + "] (SUV)");
 
-        // Driver 3: Top Right
+        // Driver 3: Top Right (40.90, -73.85)
         Driver d3 = driverService.registerDriver("Driver Charlie", "555-3333", new Vehicle("L3", "BMW", "5-Series", VehicleType.PREMIUM));
         d3.goOnline();
-        d3.setCurrentLocation(new Location(map.getMinLat() + (latSpan * 0.8), map.getMinLon() + (lonSpan * 0.8)));
+        driverService.updateDriverLocation(d3.getId(), new Location(40.90, -73.85));
         System.out.println("Online Driver: " + d3.getName() + " [ID: " + d3.getId() + "] (Premium)");
         
         System.out.println("\nDemo data populated successfully! Drivers are scattered across the map.");
         System.out.println("To test the Dijkstra routing engine, copy and paste this command:");
-        System.out.println("estimateRide " + passenger.getId() + " " + map.getMinLat() + " " + map.getMinLon() + " " + map.getMaxLat() + " " + map.getMaxLon());
+        System.out.println("estimateRide " + passenger.getId() + " 40.60 -74.15 40.91 -73.85");
     }
 
-    private double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
-        double R = 6371.0;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
+
 }

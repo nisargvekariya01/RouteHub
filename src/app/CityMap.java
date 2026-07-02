@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import utils.AccurateDistanceCalculator;
 
 /**
  * Singleton service representing the real-world road graph.
@@ -114,23 +115,12 @@ public class CityMap {
         double minDistance = Double.MAX_VALUE;
 
         for (Map.Entry<String, Location> entry : nodes.entrySet()) {
-            double dist = calculateDistance(target, entry.getValue());
+            double dist = AccurateDistanceCalculator.calculateDistance(target, entry.getValue());
             if (dist < minDistance) {
                 minDistance = dist;
                 nearestId = entry.getKey();
             }
         }
         return nearestId;
-    }
-
-    private double calculateDistance(Location loc1, Location loc2) {
-        double R = 6371.0; // Kilometers
-        double dLat = Math.toRadians(loc2.getLatitude() - loc1.getLatitude());
-        double dLon = Math.toRadians(loc2.getLongitude() - loc1.getLongitude());
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(loc1.getLatitude())) * Math.cos(Math.toRadians(loc2.getLatitude())) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
     }
 }
