@@ -15,11 +15,15 @@ public class StandardFareStrategy implements FareStrategy {
 
     @Override
     public double calculateFare(Ride ride, boolean isPeakHour) {
-        // 1. Distance charge
-        double distance = DistanceCalculator.calculateDistance(ride.getPickupLocation(), ride.getDropoffLocation());
+        // 1. Distance charge (using actual road distance from Ride object)
+        double distance = ride.getDistance();
         
-        // 2. Vehicle multiplier
-        double vehicleMultiplier = getVehicleMultiplier(ride.getDriver().getVehicle().getType());
+        // 2. Vehicle multiplier (default to ECONOMY if driver not assigned yet)
+        VehicleType vType = VehicleType.ECONOMY;
+        if (ride.getDriver() != null && ride.getDriver().getVehicle() != null) {
+            vType = ride.getDriver().getVehicle().getType();
+        }
+        double vehicleMultiplier = getVehicleMultiplier(vType);
         
         // 3. Peak multiplier
         double peakMultiplier = isPeakHour ? PEAK_MULTIPLIER : 1.0;

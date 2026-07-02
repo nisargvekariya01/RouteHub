@@ -49,6 +49,19 @@ public class ConsoleDashboard {
         System.out.println("=====================================================");
         System.out.println("        MINI UBER BACKEND - ADMIN DASHBOARD          ");
         System.out.println("=====================================================");
+        
+        app.CityMap map = app.CityMap.getInstance();
+        
+        double widthKm = calculateDistanceKm(map.getMinLat(), map.getMinLon(), map.getMinLat(), map.getMaxLon());
+        double heightKm = calculateDistanceKm(map.getMinLat(), map.getMinLon(), map.getMaxLat(), map.getMinLon());
+        double areaKm2 = widthKm * heightKm;
+
+        System.out.println("Map Bounds Loaded:");
+        System.out.println("  Bottom-Left (Min): " + map.getMinLat() + ", " + map.getMinLon());
+        System.out.println("  Top-Right   (Max): " + map.getMaxLat() + ", " + map.getMaxLon());
+        System.out.println("  Total Coverage Area: " + String.format("%.2f", areaKm2) + " km²");
+        System.out.println("  (Coordinates inside this box will snap perfectly to the road network)");
+        System.out.println("-----------------------------------------------------");
         printHelp();
 
         while (true) {
@@ -70,8 +83,11 @@ public class ConsoleDashboard {
                     case "goonline":
                         handleGoOnline(args);
                         break;
-                    case "requestride":
-                        handleRequestRide(args);
+                    case "estimateride":
+                        handleEstimateRide(args);
+                        break;
+                    case "confirmride":
+                        handleConfirmRide(args);
                         break;
                     case "startride":
                         handleStartRide(args);
@@ -110,7 +126,8 @@ public class ConsoleDashboard {
         System.out.println("  registerPassenger <name> <phoneNumber>");
         System.out.println("  registerDriver <name> <phoneNumber> <licensePlate> <make> <model> <ECONOMY|PREMIUM|SUV>");
         System.out.println("  goOnline <driverId> <lat> <lon>");
-        System.out.println("  requestRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
+        System.out.println("  estimateRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
+        System.out.println("  confirmRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
         System.out.println("  startRide <rideId> <driverId>");
         System.out.println("  completeRide <rideId>");
         System.out.println("  pay <rideId> <CASH|CARD|UPI>");
@@ -140,7 +157,7 @@ public class ConsoleDashboard {
         System.out.println("Driver " + d.getName() + " is now ONLINE at location (" + args[2] + ", " + args[3] + ").");
     }
 
-    private void handleRequestRide(String[] args) {
+    private void handleEstimateRide(String[] args) {
         Passenger p = (Passenger) userService.viewAllUsers().stream()
                 .filter(user -> user.getId().equals(args[1]) && user instanceof Passenger)
                 .findFirst()
@@ -149,7 +166,23 @@ public class ConsoleDashboard {
         Location pickup = new Location(Double.parseDouble(args[2]), Double.parseDouble(args[3]));
         Location dropoff = new Location(Double.parseDouble(args[4]), Double.parseDouble(args[5]));
         
-        Ride ride = rideService.requestRide(p, pickup, dropoff);
+        double dist = rideService.estimateRideDistance(pickup, dropoff);
+        double fare = rideService.estimateFare(dist);
+        System.out.println("=> Route Found! Real-world road distance: " + String.format("%.2f", dist) + " km.");
+        System.out.println("=> Estimated Fare: $" + String.format("%.2f", fare));
+        System.out.println("=> Type 'confirmRide " + args[1] + " " + args[2] + " " + args[3] + " " + args[4] + " " + args[5] + "' to call nearest driver.");
+    }
+
+    private void handleConfirmRide(String[] args) {
+        Passenger p = (Passenger) userService.viewAllUsers().stream()
+                .filter(user -> user.getId().equals(args[1]) && user instanceof Passenger)
+                .findFirst()
+                .orElseThrow(() -> new RideShareException("Passenger not found."));
+                
+        Location pickup = new Location(Double.parseDouble(args[2]), Double.parseDouble(args[3]));
+        Location dropoff = new Location(Double.parseDouble(args[4]), Double.parseDouble(args[5]));
+        
+        Ride ride = rideService.confirmRide(p, pickup, dropoff);
         System.out.println("Ride Successfully Booked! [Ride ID: " + ride.getId() + "]");
     }
 
@@ -204,5 +237,16 @@ public class ConsoleDashboard {
         }
         
         throw new RideShareException("User ID not found in system.");
+    }
+
+    private double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
+        double R = 6371.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 }

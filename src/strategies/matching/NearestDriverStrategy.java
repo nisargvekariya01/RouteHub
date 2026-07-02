@@ -1,48 +1,53 @@
 package strategies.matching;
 
-import exceptions.RideShareException;
+import exceptions.DriverNotFoundException;
 import models.Driver;
 import models.Location;
-import models.Passenger;
+import models.Ride;
+import models.enums.DriverStatus;
 import repositories.DriverRepository;
-import utils.DistanceCalculator;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Concrete implementation of DriverMatchingStrategy finding the geographically nearest driver.
+ * Driver Matching Strategy that uses a real road network Navigation Strategy (Dijkstra)
+ * to find the absolute closest online driver by driving distance.
+ * 
+ * DESIGN PATTERN (Strategy):
+ * Encapsulates the specific algorithm for picking a driver.
  */
 public class NearestDriverStrategy implements DriverMatchingStrategy {
 
     private final DriverRepository driverRepository;
+    private final NavigationStrategy navigationStrategy;
 
-    public NearestDriverStrategy(DriverRepository driverRepository) {
+    public NearestDriverStrategy(DriverRepository driverRepository, NavigationStrategy navigationStrategy) {
         this.driverRepository = driverRepository;
+        this.navigationStrategy = navigationStrategy;
     }
 
     @Override
-    public Driver findMatch(Passenger passenger, Location pickupLocation) {
-        List<Driver> allDrivers = driverRepository.findAll();
+    public Driver findMatchingDriver(Ride ride) {
+        Location pickupLocation = ride.getPickupLocation();
+        
+        Driver nearestDriver = null;
+        double minDistance = Double.MAX_VALUE;
 
-        List<Driver> onlineDrivers = allDrivers.stream()
-                .filter(Driver::isAvailable)
-                .filter(driver -> driver.getCurrentLocation() != null)
-                .collect(Collectors.toList());
-
-        if (onlineDrivers.isEmpty()) {
-            throw new RideShareException("No drivers available.");
+        for (Driver driver : driverRepository.findAll()) {
+            if (driver.getStatus() == DriverStatus.ONLINE && driver.getCurrentLocation() != null) {
+                // Calculate distance using actual graph routing (Dijkstra) instead of a straight line!
+                double distance = navigationStrategy.getShortestPathDistance(driver.getCurrentLocation(), pickupLocation);
+                
+                // If path exists and is the shortest
+                if (distance != -1 && distance < minDistance) {
+                    minDistance = distance;
+                    nearestDriver = driver;
+                }
+            }
         }
 
-        return Collections.min(onlineDrivers, new Comparator<Driver>() {
-            @Override
-            public int compare(Driver d1, Driver d2) {
-                double dist1 = DistanceCalculator.calculateDistance(pickupLocation, d1.getCurrentLocation());
-                double dist2 = DistanceCalculator.calculateDistance(pickupLocation, d2.getCurrentLocation());
-                return Double.compare(dist1, dist2);
-            }
-        });
+        if (nearestDriver == null) {
+            throw new DriverNotFoundException("No online drivers could reach the pickup location via valid roads.");
+        }
+
+        return nearestDriver;
     }
 }

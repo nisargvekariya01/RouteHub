@@ -46,7 +46,7 @@ public class SimulationRunner {
         Location pickup = new Location(10.1, 10.1);
         Location dropoff = new Location(20.0, 20.0);
         
-        models.Ride ride = rideService.requestRide(p1, pickup, dropoff);
+        models.Ride ride = rideService.confirmRide(p1, pickup, dropoff);
 
         System.out.println("\n--- 3. Starting the Ride ---");
         rideService.startRide(ride.getId(), d1.getId());

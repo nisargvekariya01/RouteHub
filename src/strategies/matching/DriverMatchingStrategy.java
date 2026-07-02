@@ -1,16 +1,11 @@
 package strategies.matching;
 
 import models.Driver;
-import models.Location;
-import models.Passenger;
+import models.Ride;
 
 /**
- * Strategy interface for matching riders with drivers.
- * 
- * This represents the Abstraction. Future strategies (e.g., HighestRatedDriverStrategy) 
- * can easily be added by simply creating a new class that implements this interface, 
- * without modifying the existing service code.
+ * Strategy interface for matching a requested ride to the most appropriate driver.
  */
 public interface DriverMatchingStrategy {
-    Driver findMatch(Passenger passenger, Location pickupLocation);
+    Driver findMatchingDriver(Ride ride);
 }

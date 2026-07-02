@@ -13,7 +13,10 @@ import services.RideService;
 import services.UserService;
 import observers.NotificationService;
 import strategies.matching.NearestDriverStrategy;
+import strategies.matching.NavigationStrategy;
+import strategies.matching.DijkstraNavigationStrategy;
 import strategies.pricing.StandardFareStrategy;
+import app.CityMap;
 
 /**
  * Entry point of the RideShareEngine application.
@@ -40,11 +43,13 @@ public class RideShareEngine {
         PaymentService paymentService = new PaymentService();
 
         // 3. Strategy Implementations
-        NearestDriverStrategy nearestDriverStrategy = new NearestDriverStrategy(driverRepository);
+        CityMap cityMap = CityMap.getInstance();
+        NavigationStrategy navigationStrategy = new DijkstraNavigationStrategy(cityMap);
+        NearestDriverStrategy nearestDriverStrategy = new NearestDriverStrategy(driverRepository, navigationStrategy);
         StandardFareStrategy standardFareStrategy = new StandardFareStrategy();
 
         // 4. Injecting Dependencies into RideService
-        RideService rideService = new RideService(rideRepository, nearestDriverStrategy, standardFareStrategy);
+        RideService rideService = new RideService(rideRepository, nearestDriverStrategy, standardFareStrategy, navigationStrategy);
 
         // 5. Factory Pattern + Observer Pattern Wiring
         NotificationService consoleNotifier = NotificationFactory.createNotificationService(NotificationFactory.NotificationType.CONSOLE);
