@@ -29,6 +29,72 @@ RouteHub features a custom-built, interactive Command-Line Interface (CLI) that 
 
 ---
 
+## ⏱ Algorithmic Time Complexity
+RouteHub is designed to be highly efficient, treating the city as a massive mathematical graph where $V$ is the number of intersections (Nodes) and $E$ is the number of road segments (Edges).
+
+| Operation | Algorithm Used | Time Complexity | Description |
+| :--- | :--- | :--- | :--- |
+| **Graph Initialization** | Adjacency List Parsing | `O(V + E)` | Reads the raw CSV data into memory and constructs the HashMap-based graph. |
+| **Coordinate Snapping** | Linear Search (Haversine) | `O(V)` | Scans all `15,000+` nodes to find the closest valid street intersection to a raw GPS ping. *(Can be optimized to `O(log V)` using a QuadTree).* |
+| **Estimate Routing** | Dijkstra's Shortest Path | `O((V + E) log V)` | Uses a `PriorityQueue` (Min-Heap) to calculate the shortest mathematical path between the pickup and dropoff nodes. |
+| **Dispatch Nearest Driver**| Multi-Target Dijkstra | `O(D * ((V + E) log V))`| Calculates the exact driving time from the passenger to every online driver ($D$), rather than relying on inaccurate straight-line distance, to guarantee the fastest pickup. |
+
+---
+
+## 🏗 System Architecture Diagram
+
+RouteHub was built from the ground up using **SOLID Principles**. This diagram illustrates the strict decoupling between the Presentation Layer (CLI), the Core Services, and the highly modular Strategy/Repository implementations.
+
+```mermaid
+graph TD
+    %% Core Styling
+    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef service fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef strategy fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef repository fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    %% Client Layer
+    Dashboard[💻 ConsoleDashboard REPL]:::client
+
+    %% Service Layer
+    US[UserService]:::service
+    DS[DriverService]:::service
+    RS[RideService]:::service
+    PS[PaymentService]:::service
+
+    Dashboard --> US
+    Dashboard --> DS
+    Dashboard --> RS
+    Dashboard --> PS
+
+    %% Strategy Layer (Injected dependencies)
+    MS[DriverMatchingStrategy<br/><i>(NearestDriver)</i>]:::strategy
+    NS[NavigationStrategy<br/><i>(Dijkstra)</i>]:::strategy
+    FS[FareStrategy<br/><i>(Standard/Luxury)</i>]:::strategy
+
+    RS --> MS
+    RS --> FS
+    RS --> NS
+    
+    MS -.->|Uses| NS
+
+    %% Data & Map Layer
+    CM[(CityMap Singleton<br/>15k Nodes / 33k Edges)]:::infrastructure
+    NS --> CM
+
+    Repo[(CrudRepositories<br/>InMemory / SQL)]:::repository
+    US --> Repo
+    DS --> Repo
+    RS --> Repo
+    
+    %% Observer Layer
+    Notify[NotificationService<br/><i>Observer Pattern</i>]:::infrastructure
+    RS -.->|Broadcasts Events| Notify
+```
+
+---
+
 ## 🚀 How to Run the Project
 
 Since RouteHub relies on zero external dependencies, running it is incredibly easy.
