@@ -107,6 +107,11 @@ RouteHub is designed to be highly efficient, treating the city as a massive math
 | **Coordinate Snapping** | QuadTree Search | `O(log V)` | Recursively searches the geographic QuadTree bounding boxes to snap a GPS ping to the nearest intersection. |
 | **Estimate Routing** | A* Search / Dijkstra | `O((V + E) log V)` | Uses a `PriorityQueue` (Min-Heap) and Haversine heuristic to calculate the shortest mathematical path. |
 | **Dispatch Nearest Driver**| SpatialGrid + Dijkstra | `O(1) + O(L * ((V+E)logV))`| Uses a 2km x 2km bucket grid `O(1)` to fetch local drivers ($L$), then calculates exact driving time to pick the absolute fastest driver. |
+| **Update Driver Location** | SpatialGrid Hashing | `O(1)` | Rehashes the driver's GPS coordinate to a Grid Bucket and moves their ID in memory instantaneously. |
+| **Register User/Driver** | HashMap Insertion | `O(1)` | Persists a new entity into the `CrudRepository` using an in-memory HashMap. |
+| **Start/Complete Ride** | State Machine | `O(1)` | Validates the lifecycle transition and updates the `Ride` object status. |
+| **Payment Processing** | Strategy Execution | `O(1)` | Executes the dynamically injected `PaymentMethod` (Cash, Card, UPI). |
+| **Event Broadcasting** | Observer Pattern | `O(S)` | Iterates through $S$ subscribed notification services (Console, SMS, Email) to alert users. |
 
 ---
 
