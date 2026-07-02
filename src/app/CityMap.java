@@ -22,7 +22,7 @@ public class CityMap {
     // Node ID -> Location
     private final Map<String, Location> nodes = new HashMap<>();
     
-    // Adjacency List: Node ID -> List of Edge(NeighborId, Distance)
+    // Adjacency List: Node ID -> List of Edge(NeighborId, travelTimeSeconds)
     private final Map<String, List<Edge>> adjacencyList = new HashMap<>();
 
     private double minLat = Double.MAX_VALUE;
@@ -32,11 +32,11 @@ public class CityMap {
 
     public static class Edge {
         public final String targetNode;
-        public final double distance;
+        public final double travelTimeSeconds;
 
-        public Edge(String targetNode, double distance) {
+        public Edge(String targetNode, double travelTimeSeconds) {
             this.targetNode = targetNode;
-            this.distance = distance;
+            this.travelTimeSeconds = travelTimeSeconds;
         }
     }
 

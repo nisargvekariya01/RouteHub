@@ -4,12 +4,16 @@ import models.Location;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,52 +23,67 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class to fetch real road network data from the Overpass API (OpenStreetMap).
- * Downloads raw JSON, parses it using plain Java Regex (no frameworks), and saves 
- * cleaned graph data to CSV files for the CityMap to consume.
+ * Features intelligent local caching to prevent rate-limiting, and parses OSM tags 
+ * to calculate travel-time (seconds) instead of raw distance.
  */
 public class MapDataFetcher {
 
-    private static final String OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+    private static final String OVERPASS_URL = "https://overpass.kumi.systems/api/interpreter";
+    private static final String CACHE_FILE = "delhi_map.json";
 
     public static void fetchAndSaveMapData() {
-        System.out.println("[Map API] Fetching real street network from Overpass API (Manhattan bounding box)...");
         try {
-            // Bounding box for Manhattan (~15,000 intersections)
-            String query = "[out:json][timeout:90];" +
-                           "way[\"highway\"~\"primary|secondary|tertiary|residential\"](40.72,-74.01,40.78,-73.95);" +
-                           "out body;" +
-                           ">;" +
-                           "out skel qt;";
+            String json;
+            File cache = new File(CACHE_FILE);
 
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
-            URL url = new URL(OVERPASS_URL + "?data=" + encodedQuery);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "MiniUberBackend/1.0");
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(120000); // 120 seconds read timeout
+            if (cache.exists()) {
+                System.out.println("[Map API] Loading map data instantly from local cache (" + CACHE_FILE + ")...");
+                json = new String(Files.readAllBytes(Paths.get(CACHE_FILE)), StandardCharsets.UTF_8);
+            } else {
+                System.out.println("[Map API] Fetching Delhi map data from Overpass API (This will only happen once)...");
+                
+                // Bounding box for Delhi (28.61,77.19,28.65,77.24)
+                String bbox = "28.61,77.19,28.65,77.24";
+                String query = "[out:json][timeout:90];way[\"highway\"](" + bbox + ");(._;>;);out body;";
 
-            int responseCode = connection.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                System.out.println("[Map API] Failed to fetch map data. HTTP Code: " + responseCode);
-                return;
+                String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
+                URL url = new URL(OVERPASS_URL);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("User-Agent", "MiniUberBackend/1.0");
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setDoOutput(true);
+                connection.setConnectTimeout(60000);
+                connection.setReadTimeout(120000); 
+
+                connection.getOutputStream().write(("data=" + encodedQuery).getBytes(StandardCharsets.UTF_8));
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    System.out.println("[Map API] Failed to fetch map data. HTTP Code: " + responseCode);
+                    BufferedReader errorReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                    errorReader.lines().forEach(System.out::println);
+                    return;
+                }
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = in.readLine()) != null) {
+                    response.append(line).append("\n");
+                }
+                in.close();
+
+                json = response.toString();
+                
+                // Cache the response
+                BufferedWriter cacheWriter = new BufferedWriter(new FileWriter(CACHE_FILE));
+                cacheWriter.write(json);
+                cacheWriter.close();
+                System.out.println("[Map API] SUCCESS! Map data cached to " + CACHE_FILE + ".");
             }
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = in.readLine()) != null) {
-                response.append(line).append("\n");
-            }
-            in.close();
-
-            String json = response.toString();
-            
-            BufferedWriter debugWriter = new BufferedWriter(new FileWriter("overpass_debug.json"));
-            debugWriter.write(json);
-            debugWriter.close();
-
-            System.out.println("[Map API] Data downloaded. Parsing JSON to Graph...");
+            System.out.println("[Map API] Parsing JSON to Graph...");
 
             // Parse Nodes
             Map<String, Location> nodes = new HashMap<>();
@@ -79,17 +98,41 @@ public class MapDataFetcher {
 
             // Parse Ways (Edges)
             List<String> edges = new ArrayList<>();
-            Pattern wayPattern = Pattern.compile("\"type\":\\s*\"way\".*?\"nodes\":\\s*\\[(.*?)\\]", Pattern.DOTALL);
-            Matcher wayMatcher = wayPattern.matcher(json);
-            while (wayMatcher.find()) {
-                String[] wayNodes = wayMatcher.group(1).replaceAll("\\s+", "").split(",");
-                for (int i = 0; i < wayNodes.length - 1; i++) {
-                    String u = wayNodes[i];
-                    String v = wayNodes[i+1];
+            // Split the JSON into blocks representing each 'way' to avoid complex nested regex limits
+            String[] ways = json.split("\"type\":\\s*\"way\"");
+            
+            for (int i = 1; i < ways.length; i++) {
+                String wayBody = ways[i];
+                
+                // 1. Extract the nodes array for this road segment
+                Matcher nodesMatcher = Pattern.compile("\"nodes\":\\s*\\[(.*?)\\]", Pattern.DOTALL).matcher(wayBody);
+                if (!nodesMatcher.find()) continue;
+                String[] wayNodes = nodesMatcher.group(1).replaceAll("\\s+", "").split(",");
+                
+                // 2. Extract the highway tag to determine speed
+                String highwayType = "default";
+                Matcher tagMatcher = Pattern.compile("\"highway\":\\s*\"([^\"]+)\"").matcher(wayBody);
+                if (tagMatcher.find()) {
+                    highwayType = tagMatcher.group(1);
+                }
+                
+                double speedKmh = getSpeedProfileKmh(highwayType);
+                double speedMs = speedKmh * (5.0 / 18.0); // Convert km/h to m/s
+
+                // Create bidirectional edges weighted by TRAVEL TIME
+                for (int j = 0; j < wayNodes.length - 1; j++) {
+                    String u = wayNodes[j];
+                    String v = wayNodes[j+1];
                     if (nodes.containsKey(u) && nodes.containsKey(v)) {
-                        double dist = calculateDistance(nodes.get(u), nodes.get(v));
-                        edges.add(u + "," + v + "," + dist);
-                        edges.add(v + "," + u + "," + dist); // Undirected graph for simplicity
+                        double distKm = calculateDistance(nodes.get(u), nodes.get(v));
+                        double distMeters = distKm * 1000.0;
+                        
+                        // Edge weight is now TIME (seconds) instead of distance
+                        double travelTimeSeconds = distMeters / speedMs;
+                        
+                        // We still store them as edge lengths, but the 'length' now represents time.
+                        edges.add(u + "," + v + "," + travelTimeSeconds);
+                        edges.add(v + "," + u + "," + travelTimeSeconds); 
                     }
                 }
             }
@@ -107,10 +150,24 @@ public class MapDataFetcher {
             }
             edgeWriter.close();
 
-            System.out.println("[Map API] Successfully saved " + nodes.size() + " nodes and " + edges.size() + " edges to CSV!");
+            System.out.println("[Map API] Successfully saved " + nodes.size() + " nodes and " + edges.size() + " travel-time weighted edges to CSV!");
 
         } catch (Exception e) {
             System.out.println("[Map API] Error fetching map data: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static double getSpeedProfileKmh(String highway) {
+        switch (highway.toLowerCase()) {
+            case "motorway": return 70.0;
+            case "trunk": return 60.0;
+            case "primary": return 40.0;
+            case "secondary": return 30.0;
+            case "tertiary": return 25.0;
+            case "residential": return 15.0;
+            case "unclassified": return 15.0;
+            default: return 20.0;
         }
     }
 

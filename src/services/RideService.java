@@ -14,6 +14,7 @@ import observers.NotificationService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * OBSERVER & STRATEGY PATTERNS:
@@ -48,14 +49,14 @@ public class RideService {
     }
 
     /**
-     * Step 1 of Ride Flow: Estimates a ride by finding the shortest road distance via Dijkstra.
+     * Step 1 of Ride Flow: Estimates a ride by finding the shortest road travel time via Dijkstra.
      */
-    public double estimateRideDistance(Location pickup, Location dropoff) {
-        double distance = navigationStrategy.getShortestPathDistance(pickup, dropoff);
-        if (distance == -1) {
-            throw new RideShareException("No valid road path exists between these coordinates. Are they on an island?");
+    public double estimateRideTravelTime(Location pickup, Location dropoff) {
+        double travelTime = navigationStrategy.getShortestPathTravelTime(pickup, dropoff);
+        if (travelTime == -1) {
+            throw new RideShareException("Cannot find a valid road path between these locations.");
         }
-        return distance;
+        return travelTime;
     }
 
     /**
@@ -65,14 +66,14 @@ public class RideService {
         if (passenger == null || pickup == null || dropoff == null) {
             throw new IllegalArgumentException("Invalid ride request parameters.");
         }
-
-        double distance = estimateRideDistance(pickup, dropoff);
+        double travelTime = estimateRideTravelTime(pickup, dropoff);
 
         Ride ride = new Ride.Builder()
+                .id(UUID.randomUUID().toString().substring(0, 8))
                 .passenger(passenger)
                 .pickupLocation(pickup)
                 .dropoffLocation(dropoff)
-                .distance(distance) // Set the actual road distance
+                .travelTimeSeconds(travelTime) // Set the actual road travel time
                 .build();
                 
         passenger.addRideToHistory(ride);
@@ -100,13 +101,15 @@ public class RideService {
         return ride;
     }
 
-    public double estimateFare(double distance) {
-        // Create a dummy ride to run through the strategy pattern
+    public double estimateFare(double travelTimeSeconds) {
+        boolean isPeakHour = false; // Could be dynamic
+        // Create a dummy ride to pass into the strategy
         Ride dummy = new Ride.Builder()
+                .id("dummy")
+                .passenger(new Passenger("dummy", "dummy", "dummy"))
                 .pickupLocation(new Location(0,0))
                 .dropoffLocation(new Location(0,0))
-                .passenger(new Passenger("Dummy", "Dummy", "Dummy"))
-                .distance(distance).build();
+                .travelTimeSeconds(travelTimeSeconds).build();
         return fareStrategy.calculateFare(dummy, false);
     }
 

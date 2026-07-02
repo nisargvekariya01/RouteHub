@@ -1,12 +1,12 @@
-# Implement Spatial Gridding (Sector System)
+# Real-World Map Ingestion & Travel-Time Weights
 
-- `[x]` Create `src/utils/SpatialGrid.java`
-  - Implement a 2D grid index using a HashMap mapping string coordinates (e.g., `"12_15"`) to Lists of Drivers.
-  - Implement fetching from the center grid and the 8 surrounding adjacent grids.
-- `[x]` Update `src/services/DriverService.java`
-  - Add `updateDriverLocation(driverId, location)` to keep `SpatialGrid` in sync.
-- `[x]` Update `src/strategies/matching/NearestDriverStrategy.java`
-  - Fetch candidates directly from `SpatialGrid.getDriversInAdjacentSectors()` instead of full driver repository scan.
+- `[x]` Refactor `src/app/MapDataFetcher.java`
+  - Implement intelligent caching to `delhi_map.json`.
+  - Update Overpass API query with Delhi bounding box (`28.61,77.19,28.65,77.24`).
+  - Implement advanced Regex chunking to parse `"highway"` tags alongside nodes.
+  - Apply `SPEED_PROFILE_KMH` mapping to convert geographical distance to travel time in seconds.
 - `[x]` Update `src/app/ConsoleDashboard.java`
-  - Refactor `demo` and `goOnline` commands to use `driverService.updateDriverLocation()`.
-- `[x]` Compile and verify via `demo` command.
+  - Adjust `demo` coordinates to fall within the new Delhi bounding box.
+- `[x]` Verify Engine
+  - Run `MapDataFetcher` to fetch and parse Delhi.
+  - Compile and run dashboard `demo` to verify Dijkstra solves for time.

@@ -9,13 +9,13 @@ import models.enums.VehicleType;
 public class LuxuryFareStrategy implements FareStrategy {
 
     private static final double BASE_FARE = 20.0;
-    private static final double PER_KM_RATE = 5.0;
+    private static final double PER_SECOND_RATE = 0.10; // Equivalent to $6.00 per minute
     private static final double PEAK_MULTIPLIER = 2.0;
 
     @Override
     public double calculateFare(Ride ride, boolean isPeakHour) {
-        // 1. Distance charge (using actual road distance from Ride object)
-        double distance = ride.getDistance();
+        // 1. Time charge
+        double travelTimeSeconds = ride.getTravelTimeSeconds();
         
         // 2. Vehicle multiplier (Premium vehicles cost even more in luxury strategy)
         VehicleType vType = VehicleType.PREMIUM; // Default for luxury
@@ -24,11 +24,10 @@ public class LuxuryFareStrategy implements FareStrategy {
         }
         double vehicleMultiplier = getVehicleMultiplier(vType);
         
-        // 3. Peak multiplier
         double peakMultiplier = isPeakHour ? PEAK_MULTIPLIER : 1.0;
 
         // Final formula
-        return (BASE_FARE + (distance * PER_KM_RATE)) * vehicleMultiplier * peakMultiplier;
+        return (BASE_FARE + (travelTimeSeconds * PER_SECOND_RATE)) * vehicleMultiplier * peakMultiplier;
     }
 
     private double getVehicleMultiplier(VehicleType type) {

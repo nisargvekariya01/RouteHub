@@ -24,7 +24,7 @@ public class Ride {
     private Driver driver; 
     private final Location pickupLocation;
     private final Location dropoffLocation;
-    private final double distance;
+    private final double travelTimeSeconds;
     private RideStatus status;
     private double fare;
     private final LocalDateTime time;
@@ -35,7 +35,7 @@ public class Ride {
         this.passenger = builder.passenger;
         this.pickupLocation = builder.pickupLocation;
         this.dropoffLocation = builder.dropoffLocation;
-        this.distance = builder.distance;
+        this.travelTimeSeconds = builder.travelTimeSeconds;
         this.status = RideStatus.PENDING;
         this.fare = 0.0;
         this.time = LocalDateTime.now();
@@ -47,7 +47,7 @@ public class Ride {
         private Passenger passenger;
         private Location pickupLocation;
         private Location dropoffLocation;
-        private double distance;
+        private double travelTimeSeconds;
 
         public Builder id(String id) {
             this.id = id;
@@ -69,8 +69,8 @@ public class Ride {
             return this;
         }
 
-        public Builder distance(double distance) {
-            this.distance = distance;
+        public Builder travelTimeSeconds(double travelTimeSeconds) {
+            this.travelTimeSeconds = travelTimeSeconds;
             return this;
         }
 
@@ -87,7 +87,7 @@ public class Ride {
     public Driver getDriver() { return driver; }
     public Location getPickupLocation() { return pickupLocation; }
     public Location getDropoffLocation() { return dropoffLocation; }
-    public double getDistance() { return distance; }
+    public double getTravelTimeSeconds() { return travelTimeSeconds; }
     public RideStatus getStatus() { return status; }
     public double getFare() { return fare; }
     public LocalDateTime getTime() { return time; }

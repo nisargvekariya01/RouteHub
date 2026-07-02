@@ -171,9 +171,11 @@ public class ConsoleDashboard {
         Location pickup = new Location(Double.parseDouble(args[2]), Double.parseDouble(args[3]));
         Location dropoff = new Location(Double.parseDouble(args[4]), Double.parseDouble(args[5]));
         
-        double dist = rideService.estimateRideDistance(pickup, dropoff);
-        double fare = rideService.estimateFare(dist);
-        System.out.println("=> Route Found! Real-world road distance: " + String.format("%.2f", dist) + " km.");
+        double travelTimeSeconds = rideService.estimateRideTravelTime(pickup, dropoff);
+        double fare = rideService.estimateFare(travelTimeSeconds);
+        int minutes = (int) (travelTimeSeconds / 60);
+        int seconds = (int) (travelTimeSeconds % 60);
+        System.out.println("=> Route Found! Estimated travel time: " + minutes + " min " + seconds + " sec.");
         System.out.println("=> Estimated Fare: $" + String.format("%.2f", fare));
         System.out.println("=> Type 'confirmRide " + args[1] + " " + args[2] + " " + args[3] + " " + args[4] + " " + args[5] + "' to call nearest driver.");
     }
@@ -271,30 +273,30 @@ public class ConsoleDashboard {
         Passenger passenger = userService.registerPassenger("Demo Passenger", "555-0000");
         System.out.println("Registered Passenger: " + passenger.getName() + " [ID: " + passenger.getId() + "]");
         
-        // Register and Place Drivers on specific 100k grid coordinates
+        // Register and Place Drivers on specific Delhi grid coordinates
         app.CityMap map = app.CityMap.getInstance();
         
-        // Driver 1: Bottom Left (40.61, -74.14)
+        // Driver 1: Bottom Left (28.615, 77.195)
         Driver d1 = driverService.registerDriver("Driver Alice", "555-1111", new Vehicle("L1", "Toyota", "Camry", VehicleType.ECONOMY));
         d1.goOnline();
-        driverService.updateDriverLocation(d1.getId(), new Location(40.61, -74.14));
+        driverService.updateDriverLocation(d1.getId(), new Location(28.615, 77.195));
         System.out.println("Online Driver: " + d1.getName() + " [ID: " + d1.getId() + "] (Economy)");
 
-        // Driver 2: Middle (40.75, -74.00)
+        // Driver 2: Middle (28.630, 77.215)
         Driver d2 = driverService.registerDriver("Driver Bob", "555-2222", new Vehicle("L2", "Honda", "CRV", VehicleType.SUV));
         d2.goOnline();
-        driverService.updateDriverLocation(d2.getId(), new Location(40.75, -74.00));
+        driverService.updateDriverLocation(d2.getId(), new Location(28.630, 77.215));
         System.out.println("Online Driver: " + d2.getName() + " [ID: " + d2.getId() + "] (SUV)");
 
-        // Driver 3: Top Right (40.90, -73.85)
+        // Driver 3: Top Right (28.645, 77.235)
         Driver d3 = driverService.registerDriver("Driver Charlie", "555-3333", new Vehicle("L3", "BMW", "5-Series", VehicleType.PREMIUM));
         d3.goOnline();
-        driverService.updateDriverLocation(d3.getId(), new Location(40.90, -73.85));
+        driverService.updateDriverLocation(d3.getId(), new Location(28.645, 77.235));
         System.out.println("Online Driver: " + d3.getName() + " [ID: " + d3.getId() + "] (Premium)");
         
-        System.out.println("\nDemo data populated successfully! Drivers are scattered across the map.");
+        System.out.println("\nDemo data populated successfully! Drivers are scattered across Delhi.");
         System.out.println("To test the Dijkstra routing engine, copy and paste this command:");
-        System.out.println("estimateRide " + passenger.getId() + " 40.60 -74.15 40.91 -73.85");
+        System.out.println("estimateRide " + passenger.getId() + " 28.61 77.19 28.65 77.24");
     }
 
 

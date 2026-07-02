@@ -31,7 +31,7 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
         Location pickupLocation = ride.getPickupLocation();
         
         Driver nearestDriver = null;
-        double minDistance = Double.MAX_VALUE;
+        double minTime = Double.MAX_VALUE;
 
         // NEW SPATIAL OPTIMIZATION: Fetch drivers ONLY from the local 3x3 grid sector!
         List<Driver> localDrivers = SpatialGrid.getInstance().getDriversInAdjacentSectors(pickupLocation);
@@ -39,12 +39,11 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
 
         for (Driver driver : localDrivers) {
             if (driver.getStatus() == DriverStatus.ONLINE && driver.getCurrentLocation() != null) {
-                // Calculate distance using actual graph routing (Dijkstra) instead of a straight line!
-                double distance = navigationStrategy.getShortestPathDistance(driver.getCurrentLocation(), pickupLocation);
+                // Use Dijkstra to calculate actual driving time
+                double travelTime = navigationStrategy.getShortestPathTravelTime(driver.getCurrentLocation(), pickupLocation);
                 
-                // If path exists and is the shortest
-                if (distance != -1 && distance < minDistance) {
-                    minDistance = distance;
+                if (travelTime != -1 && travelTime < minTime) {
+                    minTime = travelTime;
                     nearestDriver = driver;
                 }
             }

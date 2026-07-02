@@ -3,14 +3,15 @@ package strategies.matching;
 import app.CityMap;
 import models.Location;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 
 /**
- * Concrete strategy implementing Dijkstra's algorithm to find the absolute 
- * shortest road distance between two snapped points on the CityMap graph.
+ * Advanced Navigation Strategy.
+ * Calculates the shortest road travel time between two snapped points on the CityMap graph.
  */
 public class DijkstraNavigationStrategy implements NavigationStrategy {
 
@@ -21,12 +22,12 @@ public class DijkstraNavigationStrategy implements NavigationStrategy {
     }
 
     @Override
-    public double getShortestPathDistance(Location start, Location end) {
+    public double getShortestPathTravelTime(Location start, Location end) {
         String startNode = cityMap.snapToNearestNode(start);
         String endNode = cityMap.snapToNearestNode(end);
 
         if (startNode == null || endNode == null) {
-            return -1; // Graph is completely empty
+            return -1; // Snap failed (out of bounds)
         }
 
         if (startNode.equals(endNode)) {
@@ -34,31 +35,31 @@ public class DijkstraNavigationStrategy implements NavigationStrategy {
         }
 
         // Dijkstra's Algorithm Structures
-        Map<String, Double> distances = new HashMap<>();
-        PriorityQueue<NodeDistance> pq = new PriorityQueue<>(Comparator.comparingDouble(nd -> nd.distance));
+        Map<String, Double> times = new HashMap<>();
+        PriorityQueue<NodeTime> pq = new PriorityQueue<>(Comparator.comparingDouble(nt -> nt.time));
 
-        for (String node : cityMap.getNodes().keySet()) {
-            distances.put(node, Double.MAX_VALUE);
+        for (String node : cityMap.getAdjacencyList().keySet()) {
+            times.put(node, Double.MAX_VALUE);
         }
-        distances.put(startNode, 0.0);
-        pq.add(new NodeDistance(startNode, 0.0));
+        times.put(startNode, 0.0);
+        pq.add(new NodeTime(startNode, 0.0));
 
         while (!pq.isEmpty()) {
-            NodeDistance current = pq.poll();
+            NodeTime current = pq.poll();
 
             if (current.nodeId.equals(endNode)) {
-                return current.distance;
+                return current.time;
             }
 
-            if (current.distance > distances.get(current.nodeId)) {
-                continue; // Stale path
+            if (current.time > times.get(current.nodeId)) {
+                continue;
             }
 
-            for (CityMap.Edge edge : cityMap.getAdjacencyList().get(current.nodeId)) {
-                double newDist = distances.get(current.nodeId) + edge.distance;
-                if (newDist < distances.get(edge.targetNode)) {
-                    distances.put(edge.targetNode, newDist);
-                    pq.add(new NodeDistance(edge.targetNode, newDist));
+            for (CityMap.Edge edge : cityMap.getAdjacencyList().getOrDefault(current.nodeId, new ArrayList<>())) {
+                double newTime = times.get(current.nodeId) + edge.travelTimeSeconds;
+                if (newTime < times.get(edge.targetNode)) {
+                    times.put(edge.targetNode, newTime);
+                    pq.add(new NodeTime(edge.targetNode, newTime));
                 }
             }
         }
@@ -66,12 +67,13 @@ public class DijkstraNavigationStrategy implements NavigationStrategy {
         return -1; // No path exists (e.g. Island node)
     }
 
-    private static class NodeDistance {
+    private static class NodeTime {
         String nodeId;
-        double distance;
-        NodeDistance(String nodeId, double distance) {
+        double time;
+
+        NodeTime(String nodeId, double time) {
             this.nodeId = nodeId;
-            this.distance = distance;
+            this.time = time;
         }
     }
 }
