@@ -41,6 +41,26 @@ RouteHub is designed to be highly efficient, treating the city as a massive math
 
 ---
 
+## 🏎️ Algorithm Benchmark (Dijkstra vs A*)
+
+The routing engine contains a built-in benchmark script to run thousands of calculations across a large map spanning ~100,000 nodes. Here are the 20-iteration average benchmarking results comparing traditional Dijkstra against the optimized A* Search on a 21.48 km diagonal cross-city route:
+
+```text
+-----------------------------------------------------
+Starting Dijkstra's Algorithm (20 iterations)...
+=> Dijkstra Result Distance: 21.48 km
+=> Dijkstra Avg Exec Time:   176.28 ms
+-----------------------------------------------------
+Starting A* Algorithm (20 iterations)...
+=> A* Result Distance: 21.48 km
+=> A* Avg Exec Time:     108.80 ms
+-----------------------------------------------------
+Both algorithms correctly found the exact same optimal distance.
+On average, A* was 1.62x faster than Dijkstra.
+```
+
+---
+
 ## 🏗 System Architecture Diagram
 
 RouteHub was built from the ground up using **SOLID Principles**. This diagram illustrates the strict decoupling between the Presentation Layer (CLI), the Core Services, and the highly modular Strategy/Repository implementations.

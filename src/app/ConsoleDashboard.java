@@ -105,6 +105,9 @@ public class ConsoleDashboard {
                     case "demo":
                         handleDemo();
                         break;
+                    case "benchmark":
+                        handleBenchmark();
+                        break;
                     case "help":
                         printHelp();
                         break;
@@ -137,6 +140,7 @@ public class ConsoleDashboard {
         System.out.println("  rateAndPay <rideId> <rating(1-5)> <CASH|CARD|UPI>");
         System.out.println("  history <userId>");
         System.out.println("  demo");
+        System.out.println("  benchmark");
         System.out.println("  exit");
     }
 
@@ -171,12 +175,12 @@ public class ConsoleDashboard {
         Location pickup = new Location(Double.parseDouble(args[2]), Double.parseDouble(args[3]));
         Location dropoff = new Location(Double.parseDouble(args[4]), Double.parseDouble(args[5]));
         
-        double travelTimeSeconds = rideService.estimateRideTravelTime(pickup, dropoff);
-        double fare = rideService.estimateFare(travelTimeSeconds);
-        int minutes = (int) (travelTimeSeconds / 60);
-        int seconds = (int) (travelTimeSeconds % 60);
-        System.out.println("=> Route Found! Estimated travel time: " + minutes + " min " + seconds + " sec.");
-        System.out.println("=> Estimated Fare: $" + String.format("%.2f", fare));
+        double distance = rideService.estimateRideDistance(pickup, dropoff);
+        double fare = rideService.estimateFare(distance);
+        
+        System.out.println("\n[Estimate]");
+        System.out.println("Distance:      " + String.format("%.2f", distance) + " km");
+        System.out.println("Estimated Fare: " + String.format("%.2f", fare) + " Rs");
         System.out.println("=> Type 'confirmRide " + args[1] + " " + args[2] + " " + args[3] + " " + args[4] + " " + args[5] + "' to call nearest driver.");
     }
 
@@ -191,6 +195,7 @@ public class ConsoleDashboard {
         
         Ride ride = rideService.confirmRide(p, pickup, dropoff);
         System.out.println("Ride Successfully Booked! [Ride ID: " + ride.getId() + "]");
+        System.out.println("Distance: " + String.format("%.2f", ride.getDistance()) + " km");
         System.out.println("=> Type 'startRide " + ride.getId() + " " + ride.getDriver().getId() + "' to begin the trip.");
     }
 
@@ -265,7 +270,6 @@ public class ConsoleDashboard {
         
         throw new RideShareException("User ID not found in system.");
     }
-
     private void handleDemo() {
         System.out.println("--- Bootstrapping Demo Data ---");
         
@@ -276,10 +280,10 @@ public class ConsoleDashboard {
         // Register and Place Drivers on specific Delhi grid coordinates
         app.CityMap map = app.CityMap.getInstance();
         
-        // Driver 1: Bottom Left (28.615, 77.195)
+        // Driver 1: Bottom Left (28.590, 77.160)
         Driver d1 = driverService.registerDriver("Driver Alice", "555-1111", new Vehicle("L1", "Toyota", "Camry", VehicleType.ECONOMY));
         d1.goOnline();
-        driverService.updateDriverLocation(d1.getId(), new Location(28.615, 77.195));
+        driverService.updateDriverLocation(d1.getId(), new Location(28.590, 77.160));
         System.out.println("Online Driver: " + d1.getName() + " [ID: " + d1.getId() + "] (Economy)");
 
         // Driver 2: Middle (28.630, 77.215)
@@ -288,16 +292,18 @@ public class ConsoleDashboard {
         driverService.updateDriverLocation(d2.getId(), new Location(28.630, 77.215));
         System.out.println("Online Driver: " + d2.getName() + " [ID: " + d2.getId() + "] (SUV)");
 
-        // Driver 3: Top Right (28.645, 77.235)
+        // Driver 3: Top Right (28.670, 77.270)
         Driver d3 = driverService.registerDriver("Driver Charlie", "555-3333", new Vehicle("L3", "BMW", "5-Series", VehicleType.PREMIUM));
         d3.goOnline();
-        driverService.updateDriverLocation(d3.getId(), new Location(28.645, 77.235));
+        driverService.updateDriverLocation(d3.getId(), new Location(28.670, 77.270));
         System.out.println("Online Driver: " + d3.getName() + " [ID: " + d3.getId() + "] (Premium)");
         
         System.out.println("\nDemo data populated successfully! Drivers are scattered across Delhi.");
         System.out.println("To test the Dijkstra routing engine, copy and paste this command:");
-        System.out.println("estimateRide " + passenger.getId() + " 28.61 77.19 28.65 77.24");
+        System.out.println("estimateRide " + passenger.getId() + " 28.54 77.14 28.7 77.3");
     }
-
-
+    
+    private void handleBenchmark() {
+        tests.AlgorithmBenchmark.main(new String[0]);
+    }
 }

@@ -51,12 +51,12 @@ public class RideService {
     /**
      * Step 1 of Ride Flow: Estimates a ride by finding the shortest road travel time via Dijkstra.
      */
-    public double estimateRideTravelTime(Location pickup, Location dropoff) {
-        double travelTime = navigationStrategy.getShortestPathTravelTime(pickup, dropoff);
-        if (travelTime == -1) {
-            throw new RideShareException("Cannot find a valid road path between these locations.");
+    public double estimateRideDistance(Location pickup, Location dropoff) {
+        double distance = navigationStrategy.getShortestPathDistance(pickup, dropoff);
+        if (distance == -1) {
+            throw new RideShareException("No route found between the pickup and dropoff locations.");
         }
-        return travelTime;
+        return distance;
     }
 
     /**
@@ -66,14 +66,14 @@ public class RideService {
         if (passenger == null || pickup == null || dropoff == null) {
             throw new IllegalArgumentException("Invalid ride request parameters.");
         }
-        double travelTime = estimateRideTravelTime(pickup, dropoff);
+        double distance = estimateRideDistance(pickup, dropoff);
 
         Ride ride = new Ride.Builder()
                 .id(UUID.randomUUID().toString().substring(0, 8))
                 .passenger(passenger)
                 .pickupLocation(pickup)
                 .dropoffLocation(dropoff)
-                .travelTimeSeconds(travelTime) // Set the actual road travel time
+                .distance(distance) // Set the actual road distance
                 .build();
                 
         passenger.addRideToHistory(ride);
@@ -101,16 +101,11 @@ public class RideService {
         return ride;
     }
 
-    public double estimateFare(double travelTimeSeconds) {
+    public double estimateFare(double distance) {
         boolean isPeakHour = false; // Could be dynamic
         // Create a dummy ride to pass into the strategy
-        Ride dummy = new Ride.Builder()
-                .id("dummy")
-                .passenger(new Passenger("dummy", "dummy", "dummy"))
-                .pickupLocation(new Location(0,0))
-                .dropoffLocation(new Location(0,0))
-                .travelTimeSeconds(travelTimeSeconds).build();
-        return fareStrategy.calculateFare(dummy, false);
+        Ride dummyRide = new Ride.Builder().distance(distance).build();
+        return fareStrategy.calculateFare(dummyRide, false);
     }
 
     public Ride completeRide(String rideId, boolean isPeakHour) {

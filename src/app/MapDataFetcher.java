@@ -43,7 +43,7 @@ public class MapDataFetcher {
                 System.out.println("[Map API] Fetching Delhi map data from Overpass API (This will only happen once)...");
                 
                 // Bounding box for Delhi (28.61,77.19,28.65,77.24)
-                String bbox = "28.61,77.19,28.65,77.24";
+                String bbox = "28.58,77.15,28.68,77.28";
                 String query = "[out:json][timeout:90];way[\"highway\"](" + bbox + ");(._;>;);out body;";
 
                 String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
@@ -119,20 +119,15 @@ public class MapDataFetcher {
                 double speedKmh = getSpeedProfileKmh(highwayType);
                 double speedMs = speedKmh * (5.0 / 18.0); // Convert km/h to m/s
 
-                // Create bidirectional edges weighted by TRAVEL TIME
+                // Create bidirectional edges weighted by DISTANCE in kilometers
                 for (int j = 0; j < wayNodes.length - 1; j++) {
                     String u = wayNodes[j];
                     String v = wayNodes[j+1];
                     if (nodes.containsKey(u) && nodes.containsKey(v)) {
                         double distKm = calculateDistance(nodes.get(u), nodes.get(v));
-                        double distMeters = distKm * 1000.0;
                         
-                        // Edge weight is now TIME (seconds) instead of distance
-                        double travelTimeSeconds = distMeters / speedMs;
-                        
-                        // We still store them as edge lengths, but the 'length' now represents time.
-                        edges.add(u + "," + v + "," + travelTimeSeconds);
-                        edges.add(v + "," + u + "," + travelTimeSeconds); 
+                        edges.add(u + "," + v + "," + distKm);
+                        edges.add(v + "," + u + "," + distKm); 
                     }
                 }
             }

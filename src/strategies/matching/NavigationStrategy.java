@@ -13,5 +13,5 @@ public interface NavigationStrategy {
      * @param end The raw destination location
      * @return The distance in miles, or -1 if no path exists.
      */
-    double getShortestPathTravelTime(Location start, Location end);
+    double getShortestPathDistance(Location start, Location end);
 }

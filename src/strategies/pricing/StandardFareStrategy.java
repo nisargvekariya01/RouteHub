@@ -9,13 +9,13 @@ import models.enums.VehicleType;
 public class StandardFareStrategy implements FareStrategy {
 
     private static final double BASE_FARE = 5.0;
-    private static final double PER_SECOND_RATE = 0.05;
+    private static final double PER_KM_RATE = 12.0; // 12 Rs per km
     private static final double PEAK_MULTIPLIER = 1.5;
 
     @Override
     public double calculateFare(Ride ride, boolean isPeakHour) {
         // 1. Time charge
-        double travelTimeSeconds = ride.getTravelTimeSeconds();
+        double distance = ride.getDistance();
         
         // 2. Vehicle multiplier (default to ECONOMY if driver not assigned yet)
         VehicleType vType = VehicleType.ECONOMY;
@@ -28,7 +28,7 @@ public class StandardFareStrategy implements FareStrategy {
         double peakMultiplier = isPeakHour ? PEAK_MULTIPLIER : 1.0;
 
         // Final formula
-        return (BASE_FARE + (travelTimeSeconds * PER_SECOND_RATE)) * vehicleMultiplier * peakMultiplier;
+        return (BASE_FARE + (distance * PER_KM_RATE)) * vehicleMultiplier * peakMultiplier;
     }
 
     private double getVehicleMultiplier(VehicleType type) {
