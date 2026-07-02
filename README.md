@@ -74,6 +74,30 @@ graph TD
 
 ---
 
+## 📂 Project Structure
+
+```text
+/
+├── bin/                  # Compiled .class files
+├── src/                  # Java Source Code
+│   ├── app/              # Main entry point, Data Fetcher, and REPL Dashboard
+│   ├── exceptions/       # Custom domain exceptions
+│   ├── factories/        # Factory patterns for instantiation
+│   ├── models/           # Core entities (Passenger, Driver, Ride, Location)
+│   │   └── enums/        # State enums (RideStatus, VehicleType)
+│   ├── observers/        # Notification system implementations
+│   ├── repositories/     # Data persistence interfaces and In-Memory implementations
+│   ├── services/         # Core business logic orchestrators
+│   ├── strategies/       # Interchangeable algorithms (Pricing, Matching, Routing)
+│   ├── tests/            # Algorithmic Benchmark testing scripts
+│   └── utils/            # SpatialGrid, QuadTree, Math Utilities
+├── .gitignore            # Git ignore configuration
+├── compile.ps1           # PowerShell build script
+├── run.bat               # Windows execution script
+├── map_nodes.csv         # ~99,000 New Delhi road intersections
+└── map_edges.csv         # Road connections
+```
+
 ## ⏱ Algorithmic Time Complexity
 RouteHub is designed to be highly efficient, treating the city as a massive mathematical graph where $V$ is the number of intersections (Nodes) and $E$ is the number of road segments (Edges).
 
@@ -162,23 +186,6 @@ From there, simply follow the on-screen prompts. The console will tell you exact
 
 ---
 
-## 📂 Project Structure
-
-```text
-src/
-├── app/                  # Main entry point and Dashboard REPL
-├── exceptions/           # Custom domain exceptions (e.g., RideNotFoundException)
-├── models/               # Core entities (Passenger, Driver, Ride, Location)
-├── observers/            # Notification system implementations
-├── repositories/         # Data persistence layer
-├── services/             # Core business logic orchestrators
-├── strategies/           # Interchangeable algorithms (Pricing, Matching, Routing)
-└── utils/                # SpatialGrid, QuadTree, Math Utilities
-map_nodes.csv             # ~99,000 New Delhi road intersections (Latitude/Longitude)
-map_edges.csv             # Road connections
-```
-
----
 
 ## 🧠 Future Roadmap
 - **Multithreading:** Implement a concurrency model to simulate 100+ passengers booking simultaneously, demonstrating thread safety with `ReentrantLocks`.
