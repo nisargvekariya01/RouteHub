@@ -60,7 +60,6 @@ public class SimulationRunner {
 
         System.out.println("\n--- 6. Generating Ratings & History ---");
         driverService.rateDriver(d1.getId(), 5);
-        userService.ratePassenger(p1.getId(), 5);
         
         p1.displayHistory();
         System.out.println();

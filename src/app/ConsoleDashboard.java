@@ -129,7 +129,7 @@ public class ConsoleDashboard {
         System.out.println("  estimateRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
         System.out.println("  confirmRide <passengerId> <pickupLat> <pickupLon> <dropLat> <dropLon>");
         System.out.println("  startRide <rideId> <driverId>");
-        System.out.println("  completeRide <rideId>");
+        System.out.println("  completeRide <rideId> <rating>");
         System.out.println("  pay <rideId> <CASH|CARD|UPI>");
         System.out.println("  history <userId>");
         System.out.println("  exit");
@@ -192,8 +192,17 @@ public class ConsoleDashboard {
     }
 
     private void handleCompleteRide(String[] args) {
+        if (args.length < 3) {
+            throw new IllegalArgumentException("Usage: completeRide <rideId> <rating 1-5>");
+        }
+        int rating = Integer.parseInt(args[2]);
         Ride ride = rideService.completeRide(args[1], false);
+        
+        // Passenger rates the driver upon completion
+        driverService.rateDriver(ride.getDriver().getId(), rating);
+        
         System.out.println("Ride " + ride.getId() + " is complete. Fare due: $" + String.format("%.2f", ride.getFare()));
+        System.out.println("Passenger rated Driver " + ride.getDriver().getName() + " " + rating + " stars!");
     }
 
     private void handlePay(String[] args) {

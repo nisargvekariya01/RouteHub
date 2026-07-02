@@ -38,20 +38,6 @@ public class UserService {
         return passenger;
     }
     
-    public Passenger ratePassenger(String userId, int rating) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RideShareException("User with ID " + userId + " not found."));
-            
-        if (!(user instanceof Passenger)) {
-            throw new RideShareException("Only passengers can receive passenger ratings.");
-        }
-        
-        Passenger passenger = (Passenger) user;
-        passenger.addRating(rating);
-        userRepository.update(passenger);
-        return passenger;
-    }
-
     public List<User> viewAllUsers() {
         return userRepository.findAll();
     }
