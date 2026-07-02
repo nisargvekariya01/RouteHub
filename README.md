@@ -104,31 +104,31 @@ Let $V$ = number of nodes (intersections) and $E$ = number of edges (roads).
 ### Graph Operations
 | Operation | Time Complexity | Explanation |
 | :--- | :--- | :--- |
-| **Add Node** | `O(1)` | Direct HashMap insertion during data parsing. |
-| **Add Edge** | `O(1)` | Instantly appends connection to the Adjacency List. |
-| **Get Neighbors**| `O(1)` | Direct HashMap lookup for adjacent nodes. |
-| **Get Node by ID**| `O(1)` | Direct HashMap lookup. |
+| **Add Node** | `O(1)` | Populates the core routing graph by mapping a unique String ID to a `Location` object in constant time. |
+| **Add Edge** | `O(1)` | Links two intersections by pushing a weighted `Edge` into the graph's internal adjacency map. |
+| **Get Neighbors**| `O(1)` | Retrieves all connected outbound roads for a specific intersection instantly via hash targeting. |
+| **Get Node by ID**| `O(1)` | Fetches the exact Latitude/Longitude coordinates of an intersection without any graph traversal. |
 
 ### QuadTree Operations
 | Operation | Average Case | Worst Case | Explanation |
 | :--- | :--- | :--- | :--- |
-| **Insert** | `O(log V)` | `O(V)` | Recursively subdivides space; degrades only if all points are co-located in the exact same spot. |
-| **Nearest Neighbor**| `O(log V)` | `O(V)` | Branch-and-bound pruning safely skips irrelevant geographic quadrants to instantly snap coordinates. |
+| **Insert** | `O(log V)` | `O(V)` | Distributes map nodes into geometric quadrants. Efficiency drops only if coordinate density becomes mathematically infinite at a single point. |
+| **Nearest Neighbor**| `O(log V)` | `O(V)` | Rapidly converges on a raw GPS coordinate by entirely ignoring regions of the map that cannot physically contain the closest road. |
 
 ### Routing Algorithms
 | Algorithm | Time Complexity | Space Complexity | Explanation |
 | :--- | :--- | :--- | :--- |
-| **Dijkstra** | `O((V + E) log V)` | `O(V)` | Min-heap priority queue; guarantees absolute shortest path. |
-| **A* Search** | `O((V + E) log V)` | `O(V)` | Same mathematical worst-case as Dijkstra, but the geographic heuristic severely prunes the search space, exploring drastically fewer nodes in practice. |
-| **Dispatch Driver** | `O(1) + O(L log L)`| `O(L)` | `O(1)` to fetch local drivers via SpatialGrid bucket, then calculates paths for those $L$ nearby drivers instead of the whole city. |
+| **Dijkstra** | `O((V + E) log V)` | `O(V)` | Exhaustively expands outward from the starting node in all directions using a Min-Heap until the destination is hit. Prioritizes raw accuracy. |
+| **A* Search** | `O((V + E) log V)` | `O(V)` | Injects spatial awareness via the Haversine formula to aggressively 'steer' the search toward the destination, bypassing thousands of useless roads. |
+| **Dispatch Driver** | `O(1) + O(L log L)`| `O(L)` | Uses a grid filter to isolate nearby drivers ($L$), avoiding the fatal mistake of running heavy routing calculations across the entire global fleet. |
 
 ### Application Lifecycle
 | Operation | Time Complexity | Explanation |
 | :--- | :--- | :--- |
-| **Update Driver GPS**| `O(1)` | `SpatialGrid` rehashes the driver's location to a 2km sector Bucket instantly. |
-| **Register Entity** | `O(1)` | `CrudRepository` inserts the Passenger/Driver into memory. |
-| **Start/Complete** | `O(1)` | State machine validates transition and updates the `Ride` status. |
-| **Process Payment** | `O(1)` | Dynamic strategy injection instantly executes Cash/Card/UPI algorithm. |
+| **Update Driver GPS**| `O(1)` | Re-assigns a moving vehicle to a new discrete map sector without iterating over the existing driver pool. |
+| **Register Entity** | `O(1)` | Initializes domain entities (passengers, drivers) directly into the underlying repository layer. |
+| **Start/Complete** | `O(1)` | Enforces strict business rules to progress a ride through its required stages (Pending -> Accepted -> Started -> Completed). |
+| **Process Payment** | `O(1)` | Delegates fare deduction logic to interchangeable payment providers without altering core services. |
 
 ---
 
