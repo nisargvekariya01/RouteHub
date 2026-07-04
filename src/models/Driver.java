@@ -68,7 +68,7 @@ public class Driver extends User {
     }
 
     // --- HISTORY & EARNINGS ---
-
+    
     public int getTripsCompleted() {
         return tripsCompleted;
     }

@@ -17,7 +17,7 @@ public class InMemoryDriverRepository extends InMemoryCrudRepository<Driver, Str
     public static synchronized InMemoryDriverRepository getInstance() {
         if (instance == null) {
             instance = new InMemoryDriverRepository();
-        }
+        } 
         return instance;
     }
 

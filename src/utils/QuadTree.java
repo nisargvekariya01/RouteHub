@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuadTree {
-
     private static final int MAX_CAPACITY = 50;
 
     private final BoundingBox boundary;
