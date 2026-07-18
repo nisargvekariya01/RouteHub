@@ -1,11 +1,10 @@
 package services;
 
 import exceptions.RideShareException;
+import java.util.UUID;
 import models.Payment;
 import models.enums.PaymentStatus;
 import strategies.payment.PaymentMethod;
-
-import java.util.UUID;
 
 public class PaymentService {
     

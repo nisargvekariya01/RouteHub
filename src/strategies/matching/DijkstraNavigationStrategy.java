@@ -1,13 +1,12 @@
 package strategies.matching;
 
 import app.CityMap;
-import models.Location;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
+import models.Location;
 
 /**
  * Advanced Navigation Strategy.

@@ -2,14 +2,13 @@ package services;
 
 import exceptions.DriverNotFoundException;
 import exceptions.DuplicateUserException;
+import java.util.List;
+import java.util.UUID;
 import models.Driver;
 import models.Location;
 import models.Vehicle;
 import repositories.DriverRepository;
 import utils.SpatialGrid;
-
-import java.util.List;
-import java.util.UUID;
 
 public class DriverService {
     private final DriverRepository driverRepository;

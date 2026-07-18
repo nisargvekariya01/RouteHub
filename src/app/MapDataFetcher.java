@@ -1,11 +1,8 @@
 package app;
 
-import models.Location;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -20,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import models.Location;
 
 /**
  * Utility class to fetch real road network data from the Overpass API (OpenStreetMap).
@@ -115,9 +113,6 @@ public class MapDataFetcher {
                 if (tagMatcher.find()) {
                     highwayType = tagMatcher.group(1);
                 }
-                
-                double speedKmh = getSpeedProfileKmh(highwayType);
-                double speedMs = speedKmh * (5.0 / 18.0); // Convert km/h to m/s
 
                 // Create bidirectional edges weighted by DISTANCE in kilometers
                 for (int j = 0; j < wayNodes.length - 1; j++) {
@@ -145,24 +140,11 @@ public class MapDataFetcher {
             }
             edgeWriter.close();
 
-            System.out.println("[Map API] Successfully saved " + nodes.size() + " nodes and " + edges.size() + " travel-time weighted edges to CSV!");
+            System.out.println("[Map API] Successfully saved " + nodes.size() + " nodes and " + edges.size() + " distance-weighted edges to CSV!");
 
         } catch (Exception e) {
             System.out.println("[Map API] Error fetching map data: " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-
-    private static double getSpeedProfileKmh(String highway) {
-        switch (highway.toLowerCase()) {
-            case "motorway": return 70.0;
-            case "trunk": return 60.0;
-            case "primary": return 40.0;
-            case "secondary": return 30.0;
-            case "tertiary": return 25.0;
-            case "residential": return 15.0;
-            case "unclassified": return 15.0;
-            default: return 20.0;
         }
     }
 

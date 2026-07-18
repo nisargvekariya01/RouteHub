@@ -1,6 +1,7 @@
 package app;
 
 import factories.NotificationFactory;
+import observers.NotificationService;
 import repositories.DriverRepository;
 import repositories.InMemoryDriverRepository;
 import repositories.InMemoryRideRepository;
@@ -11,12 +12,10 @@ import services.DriverService;
 import services.PaymentService;
 import services.RideService;
 import services.UserService;
-import observers.NotificationService;
-import strategies.matching.NearestDriverStrategy;
-import strategies.matching.NavigationStrategy;
 import strategies.matching.DijkstraNavigationStrategy;
+import strategies.matching.NavigationStrategy;
+import strategies.matching.NearestDriverStrategy;
 import strategies.pricing.StandardFareStrategy;
-import app.CityMap;
 
 /**
  * Entry point of the RideShareEngine application.

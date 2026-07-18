@@ -1,10 +1,9 @@
 package models;
 
-import models.enums.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import models.enums.*;
 
 /**
  * Model representing a passenger requesting rides.

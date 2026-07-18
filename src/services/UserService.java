@@ -1,13 +1,11 @@
 package services;
 
 import exceptions.DuplicateUserException;
-import exceptions.RideShareException;
+import java.util.List;
+import java.util.UUID;
 import models.Passenger;
 import models.User;
 import repositories.UserRepository;
-
-import java.util.List;
-import java.util.UUID;
 
 public class UserService {
     private final UserRepository userRepository;

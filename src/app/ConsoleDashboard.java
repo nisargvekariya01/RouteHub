@@ -1,6 +1,7 @@
 package app;
 
 import exceptions.RideShareException;
+import java.util.Scanner;
 import models.Driver;
 import models.Location;
 import models.Passenger;
@@ -18,8 +19,6 @@ import strategies.payment.CashPayment;
 import strategies.payment.PaymentMethod;
 import strategies.payment.UpiPayment;
 import utils.AccurateDistanceCalculator;
-
-import java.util.Scanner;
 
 /**
  * Interactive Command-Line Dashboard for the RideShare Engine.

@@ -1,14 +1,12 @@
 package utils;
 
-import models.Driver;
-import models.Location;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import models.Driver;
+import models.Location;
 
 /**
  * Spatial Indexing system that divides the map into discrete mathematical buckets (sectors).

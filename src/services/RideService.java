@@ -2,19 +2,18 @@ package services;
 
 import exceptions.RideNotFoundException;
 import exceptions.RideShareException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import models.Driver;
 import models.Location;
 import models.Passenger;
 import models.Ride;
+import observers.NotificationService;
 import repositories.RideRepository;
 import strategies.matching.DriverMatchingStrategy;
 import strategies.matching.NavigationStrategy;
 import strategies.pricing.FareStrategy;
-import observers.NotificationService;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * OBSERVER & STRATEGY PATTERNS:
